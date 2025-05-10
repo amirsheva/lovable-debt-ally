@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +10,8 @@ import NotFound from "./pages/NotFound";
 import DebtPage from "./pages/DebtPage";
 import DebtsListPage from "./pages/DebtsListPage";
 import AddDebtPage from "./pages/AddDebtPage";
+import CalendarPage from "./pages/CalendarPage";
+import ReportsPage from "./pages/ReportsPage"; 
 import { Debt, Payment } from "./types";
 import { generateMockDebts, generateMockPayments } from "./utils/debtUtils";
 
@@ -20,22 +23,60 @@ const App = () => {
 
   // Load mock data on app mount
   useEffect(() => {
-    setDebts(generateMockDebts());
-    setPayments(generateMockPayments());
+    // Check localStorage first for existing data
+    const storedDebts = localStorage.getItem('debts');
+    const storedPayments = localStorage.getItem('payments');
+    
+    if (storedDebts && storedPayments) {
+      setDebts(JSON.parse(storedDebts));
+      setPayments(JSON.parse(storedPayments));
+    } else {
+      // Use mock data if no stored data exists
+      const mockDebts = generateMockDebts();
+      const mockPayments = generateMockPayments();
+      
+      setDebts(mockDebts);
+      setPayments(mockPayments);
+      
+      // Store in localStorage
+      localStorage.setItem('debts', JSON.stringify(mockDebts));
+      localStorage.setItem('payments', JSON.stringify(mockPayments));
+    }
   }, []);
+
+  // Update localStorage whenever data changes
+  useEffect(() => {
+    if (debts.length > 0) {
+      localStorage.setItem('debts', JSON.stringify(debts));
+    }
+  }, [debts]);
+
+  useEffect(() => {
+    if (payments.length > 0) {
+      localStorage.setItem('payments', JSON.stringify(payments));
+    }
+  }, [payments]);
 
   // Handler for adding a new debt
   const handleAddDebt = (newDebt: Debt) => {
-    setDebts(prevDebts => [...prevDebts, newDebt]);
+    setDebts(prevDebts => {
+      const updatedDebts = [...prevDebts, newDebt];
+      localStorage.setItem('debts', JSON.stringify(updatedDebts));
+      return updatedDebts;
+    });
   };
 
   // Handler for adding a new payment
   const handleAddPayment = (newPayment: Payment) => {
-    setPayments(prevPayments => [...prevPayments, newPayment]);
+    setPayments(prevPayments => {
+      const updatedPayments = [...prevPayments, newPayment];
+      localStorage.setItem('payments', JSON.stringify(updatedPayments));
+      return updatedPayments;
+    });
     
     // Update debt status if needed
     setDebts(prevDebts => {
-      return prevDebts.map(debt => {
+      const updatedDebts = prevDebts.map(debt => {
         if (debt.id === newPayment.debtId) {
           // If remaining balance is 0 or less, mark as completed
           if (newPayment.remainingBalance <= 0) {
@@ -48,6 +89,9 @@ const App = () => {
         }
         return debt;
       });
+      
+      localStorage.setItem('debts', JSON.stringify(updatedDebts));
+      return updatedDebts;
     });
   };
 
@@ -78,6 +122,24 @@ const App = () => {
                   debts={debts} 
                   payments={payments}
                   onAddPayment={handleAddPayment}
+                />
+              } 
+            />
+            <Route 
+              path="/calendar" 
+              element={
+                <CalendarPage 
+                  debts={debts}
+                  payments={payments}
+                />
+              } 
+            />
+            <Route 
+              path="/reports" 
+              element={
+                <ReportsPage 
+                  debts={debts}
+                  payments={payments}
                 />
               } 
             />
