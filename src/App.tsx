@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,7 +11,7 @@ import DebtsListPage from "./pages/DebtsListPage";
 import AddDebtPage from "./pages/AddDebtPage";
 import CalendarPage from "./pages/CalendarPage";
 import ReportsPage from "./pages/ReportsPage"; 
-import { Debt, Payment } from "./types";
+import { Debt, Payment, DebtStatus } from "./types";
 import { generateMockDebts, generateMockPayments } from "./utils/debtUtils";
 
 const queryClient = new QueryClient();
@@ -80,11 +79,11 @@ const App = () => {
         if (debt.id === newPayment.debtId) {
           // If remaining balance is 0 or less, mark as completed
           if (newPayment.remainingBalance <= 0) {
-            return { ...debt, status: 'completed' };
+            return { ...debt, status: 'completed' as DebtStatus };
           }
           // Otherwise mark as in_progress if it was pending
           if (debt.status === 'pending') {
-            return { ...debt, status: 'in_progress' };
+            return { ...debt, status: 'in_progress' as DebtStatus };
           }
         }
         return debt;
