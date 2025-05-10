@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Debt, DebtType } from '../types';
@@ -41,23 +40,20 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    const amount = parseFloat(formData.amount);
+    const installments = formData.hasInstallments ? parseInt(formData.installments) : 1;
+    
+    // Calculate installment amount separately to avoid TypeScript error
+    const installmentAmount = amount / installments;
+    
     // Create the new debt object
     const newDebt: Debt = {
       id: Date.now().toString(),
-      amount: parseFloat(formData.amount),
+      amount: amount,
       debtType: formData.debtType,
       dueDate: formData.dueDate,
-      installments: formData.hasInstallments ? parseInt(formData.installments) : 1,
-      installmentAmount: calculateInstallmentAmount({
-        ...formData,
-        amount: parseFloat(formData.amount),
-        installments: formData.hasInstallments ? parseInt(formData.installments) : 1,
-        id: '',
-        dueDate: formData.dueDate,
-        description: formData.description,
-        status: 'pending',
-        createdAt: ''
-      } as Debt),
+      installments: installments,
+      installmentAmount: installmentAmount,
       description: formData.description,
       status: 'pending',
       createdAt: format(new Date(), 'yyyy-MM-dd')
