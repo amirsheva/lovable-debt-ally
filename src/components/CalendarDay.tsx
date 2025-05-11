@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns-jalali';
+import { format } from 'date-fns';
 import { DayNote } from '@/types';
 
 interface CalendarDayProps {
@@ -46,6 +46,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
       const fetchNote = async () => {
         setIsLoading(true);
         try {
+          // Use raw query for day_notes since it's not in the types
           const { data, error } = await supabase
             .from('day_notes')
             .select('*')
@@ -167,7 +168,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{format(date, 'PPPP')}</DialogTitle>
+          <DialogTitle>{format(date, 'PPP')}</DialogTitle>
           <DialogDescription>
             یادداشت خود را برای این روز وارد کنید
           </DialogDescription>

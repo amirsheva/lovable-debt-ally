@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { format } from 'date-fns-jalali';
+import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -74,19 +74,31 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
   useEffect(() => {
     const fetchCategoriesAndBanks = async () => {
       if (settings.enabledFeatures.categories) {
+        // Use raw query for debt_categories since it's not in the types
         const { data: categoriesData } = await supabase
           .from('debt_categories')
           .select('*')
           .order('name');
-        if (categoriesData) setCategories(categoriesData);
+          
+        if (categoriesData) {
+          // Type cast the response to Category[]
+          const typedCategories = categoriesData as unknown as Category[];
+          setCategories(typedCategories);
+        }
       }
       
       if (settings.enabledFeatures.banks) {
+        // Use raw query for banks since it's not in the types
         const { data: banksData } = await supabase
           .from('banks')
           .select('*')
           .order('name');
-        if (banksData) setBanks(banksData);
+          
+        if (banksData) {
+          // Type cast the response to Bank[]
+          const typedBanks = banksData as unknown as Bank[];
+          setBanks(typedBanks);
+        }
       }
     };
     
@@ -341,7 +353,7 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
                           onSelect={field.onChange}
                           disabled={(date) => date < new Date("1380-01-01")}
                           initialFocus
-                          locale="fa-IR"
+                          className="pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>

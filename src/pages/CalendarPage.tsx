@@ -4,9 +4,8 @@ import Layout from '../components/Layout';
 import CalendarDay from '../components/CalendarDay';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, parse, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, addDays, isSameMonth, isSameDay } from 'date-fns-jalali';
+import { format, parse, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, addDays, isSameMonth, isSameDay } from 'date-fns';
 import { Debt, Payment } from '../types';
 
 interface CalendarPageProps {
@@ -136,7 +135,7 @@ const CalendarPage: React.FC<CalendarPageProps> = ({ debts, payments }) => {
         {selectedDate && (
           <Card>
             <CardHeader>
-              <CardTitle>{format(selectedDate, 'PPPP')}</CardTitle>
+              <CardTitle>{format(selectedDate, 'PPP')}</CardTitle>
               <CardDescription>بدهی‌ها و پرداخت‌های این روز</CardDescription>
             </CardHeader>
             <CardContent>
