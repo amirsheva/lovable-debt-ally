@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +12,7 @@ import DebtsListPage from "./pages/DebtsListPage";
 import AddDebtPage from "./pages/AddDebtPage";
 import CalendarPage from "./pages/CalendarPage";
 import ReportsPage from "./pages/ReportsPage"; 
+import SettingsPage from "./pages/SettingsPage";
 import { Debt, Payment, DebtStatus } from "./types";
 import { useToast } from "./hooks/use-toast";
 import { 
@@ -197,6 +199,10 @@ const App = () => {
                   payments={payments}
                 />
               } 
+            />
+            <Route 
+              path="/settings" 
+              element={<SettingsPage />} 
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
