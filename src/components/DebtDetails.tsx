@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Debt, Payment } from '../types';
@@ -10,20 +9,23 @@ import {
   calculateNextPaymentDate 
 } from '../utils/debtUtils';
 import { ArrowLeft, Calendar, Check, Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface DebtDetailsProps {
   debts: Debt[];
   payments: Payment[];
-  onAddPayment?: (payment: Payment) => void;
+  onAddPayment?: (payment: Omit<Payment, "id">) => Promise<Payment>;
 }
 
 const DebtDetails: React.FC<DebtDetailsProps> = ({ debts, payments, onAddPayment }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Find the debt by ID
   const debt = debts.find(debt => debt.id === id);
@@ -43,40 +45,58 @@ const DebtDetails: React.FC<DebtDetailsProps> = ({ debts, payments, onAddPayment
     return null;
   }
   
-  const handleAddPayment = (e: React.FormEvent) => {
+  const handleAddPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate payment amount
-    const amount = parseFloat(paymentAmount);
-    if (isNaN(amount) || amount <= 0) {
-      alert('لطفاً مبلغ معتبری وارد کنید');
-      return;
+    if (isSubmitting) return;
+    
+    try {
+      // Validate payment amount
+      const amount = parseFloat(paymentAmount);
+      if (isNaN(amount) || amount <= 0) {
+        toast({
+          variant: "destructive",
+          title: "خطا در مقدار",
+          description: "لطفاً مبلغ معتبری وارد کنید.",
+        });
+        return;
+      }
+      
+      setIsSubmitting(true);
+      
+      // Create new payment
+      const newPayment = {
+        debtId: debt.id,
+        paymentDate,
+        paymentAmount: amount,
+        remainingBalance: remainingBalance - amount
+      };
+      
+      // Call the onAddPayment function if provided
+      if (onAddPayment) {
+        await onAddPayment(newPayment);
+      }
+      
+      // Show success message
+      toast({
+        title: "پرداخت ثبت شد",
+        description: "پرداخت با موفقیت ثبت شد.",
+      });
+      
+      // Close the modal and reset form
+      setShowPaymentModal(false);
+      setPaymentAmount('');
+      setPaymentDate(new Date().toISOString().split('T')[0]);
+    } catch (error) {
+      console.error('Error adding payment:', error);
+      toast({
+        variant: "destructive",
+        title: "خطا در ثبت پرداخت",
+        description: "لطفاً دوباره تلاش کنید.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Create new payment
-    const newPayment: Payment = {
-      id: Date.now().toString(),
-      debtId: debt.id,
-      paymentDate,
-      paymentAmount: amount,
-      remainingBalance: remainingBalance - amount
-    };
-    
-    // Call the onAddPayment function if provided
-    if (onAddPayment) {
-      onAddPayment(newPayment);
-    }
-    
-    // For now, let's just log the payment
-    console.log('Payment added:', newPayment);
-    
-    // Show success message
-    alert('پرداخت با موفقیت ثبت شد');
-    
-    // Close the modal and reset form
-    setShowPaymentModal(false);
-    setPaymentAmount('');
-    setPaymentDate(new Date().toISOString().split('T')[0]);
   };
   
   return (
@@ -279,14 +299,20 @@ const DebtDetails: React.FC<DebtDetailsProps> = ({ debts, payments, onAddPayment
                     type="button"
                     onClick={() => setShowPaymentModal(false)}
                     className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200"
+                    disabled={isSubmitting}
                   >
                     انصراف
                   </button>
                   <button
                     type="submit"
-                    className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center"
+                    disabled={isSubmitting}
+                    className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center disabled:opacity-70"
                   >
-                    <Check className="h-4 w-4 ml-1" /> ثبت پرداخت
+                    {isSubmitting ? 'در حال ثبت...' : (
+                      <>
+                        <Check className="h-4 w-4 ml-1" /> ثبت پرداخت
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

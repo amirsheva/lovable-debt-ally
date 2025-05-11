@@ -4,13 +4,15 @@ import { Debt, DebtType } from '../types';
 import { calculateInstallmentAmount } from '../utils/debtUtils';
 import { format } from 'date-fns';
 import { Calendar } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface AddDebtFormProps {
-  onAddDebt?: (debt: Debt) => void;
+  onAddDebt?: (debt: Omit<Debt, "id" | "createdAt">) => Promise<Debt>;
 }
 
 const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   const [formData, setFormData] = useState({
     amount: '',
@@ -20,6 +22,8 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
     description: '',
     hasInstallments: false
   });
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -37,41 +41,54 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
     }));
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const amount = parseFloat(formData.amount);
-    const installments = formData.hasInstallments ? parseInt(formData.installments) : 1;
+    if (isSubmitting) return;
     
-    // Calculate installment amount separately to avoid TypeScript error
-    const installmentAmount = amount / installments;
-    
-    // Create the new debt object
-    const newDebt: Debt = {
-      id: Date.now().toString(),
-      amount: amount,
-      debtType: formData.debtType,
-      dueDate: formData.dueDate,
-      installments: installments,
-      installmentAmount: installmentAmount,
-      description: formData.description,
-      status: 'pending',
-      createdAt: format(new Date(), 'yyyy-MM-dd')
-    };
-    
-    // Call the onAddDebt function if provided
-    if (onAddDebt) {
-      onAddDebt(newDebt);
+    try {
+      setIsSubmitting(true);
+      
+      const amount = parseFloat(formData.amount);
+      const installments = formData.hasInstallments ? parseInt(formData.installments) : 1;
+      
+      // Calculate installment amount separately to avoid TypeScript error
+      const installmentAmount = amount / installments;
+      
+      // Create the new debt object
+      const newDebt = {
+        amount: amount,
+        debtType: formData.debtType,
+        dueDate: formData.dueDate,
+        installments: installments,
+        installmentAmount: installmentAmount,
+        description: formData.description,
+        status: 'pending' as const,
+      };
+      
+      // Call the onAddDebt function if provided
+      if (onAddDebt) {
+        await onAddDebt(newDebt);
+      }
+      
+      // Show success message
+      toast({
+        title: "بدهی جدید اضافه شد",
+        description: "بدهی جدید با موفقیت ثبت شد.",
+      });
+      
+      // Redirect to the debts page
+      navigate('/debts');
+    } catch (error) {
+      console.error('Error adding debt:', error);
+      toast({
+        variant: "destructive",
+        title: "خطا در ثبت بدهی",
+        description: "لطفاً دوباره تلاش کنید.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // For now, let's just log the data and redirect
-    console.log('New debt added:', newDebt);
-    
-    // Show success message (toast would be ideal)
-    alert('بدهی جدید با موفقیت اضافه شد');
-    
-    // Redirect to the debts page
-    navigate('/debts');
   };
 
   return (
@@ -200,9 +217,10 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
           <div className="flex justify-end pt-4">
             <button
               type="submit"
-              className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              disabled={isSubmitting}
+              className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-70"
             >
-              ثبت بدهی
+              {isSubmitting ? 'در حال ثبت...' : 'ثبت بدهی'}
             </button>
           </div>
         </div>

@@ -13,6 +13,7 @@ export interface Debt {
   description: string;
   status: DebtStatus;
   createdAt: string; // ISO date string
+  user_id?: string; // Optional for backward compatibility
 }
 
 export interface Payment {
@@ -21,4 +22,5 @@ export interface Payment {
   paymentDate: string; // ISO date string
   paymentAmount: number;
   remainingBalance: number;
+  user_id?: string; // Optional for backward compatibility
 }

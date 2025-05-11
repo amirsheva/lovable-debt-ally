@@ -9,7 +9,83 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      debts: {
+        Row: {
+          amount: number
+          created_at: string
+          debt_type: string
+          description: string
+          due_date: string
+          id: string
+          installment_amount: number
+          installments: number
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          debt_type: string
+          description: string
+          due_date: string
+          id?: string
+          installment_amount: number
+          installments?: number
+          status: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          debt_type?: string
+          description?: string
+          due_date?: string
+          id?: string
+          installment_amount?: number
+          installments?: number
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          created_at: string
+          debt_id: string
+          id: string
+          payment_amount: number
+          payment_date: string
+          remaining_balance: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          debt_id: string
+          id?: string
+          payment_amount: number
+          payment_date: string
+          remaining_balance: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          debt_id?: string
+          id?: string
+          payment_amount?: number
+          payment_date?: string
+          remaining_balance?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_debt_id_fkey"
+            columns: ["debt_id"]
+            isOneToOne: false
+            referencedRelation: "debts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

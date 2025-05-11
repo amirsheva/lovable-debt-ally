@@ -12,87 +12,143 @@ import AddDebtPage from "./pages/AddDebtPage";
 import CalendarPage from "./pages/CalendarPage";
 import ReportsPage from "./pages/ReportsPage"; 
 import { Debt, Payment, DebtStatus } from "./types";
-import { generateMockDebts, generateMockPayments } from "./utils/debtUtils";
+import { useToast } from "./hooks/use-toast";
+import { 
+  fetchDebts, 
+  fetchPayments, 
+  addDebt, 
+  addPayment, 
+  updateDebtStatus, 
+  migrateLocalStorageToSupabase 
+} from "./services/debtService";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: true,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => {
   const [debts, setDebts] = useState<Debt[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Load mock data on app mount
+  // Initial data loading from Supabase
   useEffect(() => {
-    // Check localStorage first for existing data
-    const storedDebts = localStorage.getItem('debts');
-    const storedPayments = localStorage.getItem('payments');
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Try to migrate data from localStorage if this is first run
+        await migrateLocalStorageToSupabase();
+        
+        // Fetch data from Supabase
+        const [debtsData, paymentsData] = await Promise.all([
+          fetchDebts(),
+          fetchPayments()
+        ]);
+        
+        setDebts(debtsData);
+        setPayments(paymentsData);
+        
+        toast({
+          title: "اطلاعات بارگذاری شد",
+          description: "اطلاعات با موفقیت از پایگاه داده بارگذاری شد.",
+        });
+      } catch (error) {
+        console.error("Error loading data:", error);
+        toast({
+          variant: "destructive",
+          title: "خطا در بارگذاری اطلاعات",
+          description: "لطفاً صفحه را مجدداً بارگذاری کنید.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    if (storedDebts && storedPayments) {
-      setDebts(JSON.parse(storedDebts));
-      setPayments(JSON.parse(storedPayments));
-    } else {
-      // Use mock data if no stored data exists
-      const mockDebts = generateMockDebts();
-      const mockPayments = generateMockPayments();
-      
-      setDebts(mockDebts);
-      setPayments(mockPayments);
-      
-      // Store in localStorage
-      localStorage.setItem('debts', JSON.stringify(mockDebts));
-      localStorage.setItem('payments', JSON.stringify(mockPayments));
-    }
+    loadData();
   }, []);
 
-  // Update localStorage whenever data changes
-  useEffect(() => {
-    if (debts.length > 0) {
-      localStorage.setItem('debts', JSON.stringify(debts));
-    }
-  }, [debts]);
-
-  useEffect(() => {
-    if (payments.length > 0) {
-      localStorage.setItem('payments', JSON.stringify(payments));
-    }
-  }, [payments]);
-
   // Handler for adding a new debt
-  const handleAddDebt = (newDebt: Debt) => {
-    setDebts(prevDebts => {
-      const updatedDebts = [...prevDebts, newDebt];
-      localStorage.setItem('debts', JSON.stringify(updatedDebts));
-      return updatedDebts;
-    });
+  const handleAddDebt = async (newDebt: Omit<Debt, "id" | "createdAt">) => {
+    try {
+      const createdDebt = await addDebt(newDebt);
+      setDebts(prevDebts => [...prevDebts, createdDebt]);
+      
+      toast({
+        title: "بدهی جدید اضافه شد",
+        description: "بدهی جدید با موفقیت ثبت شد.",
+      });
+      
+      return createdDebt;
+    } catch (error) {
+      console.error("Error adding debt:", error);
+      toast({
+        variant: "destructive",
+        title: "خطا در ثبت بدهی",
+        description: "لطفاً دوباره تلاش کنید.",
+      });
+      throw error;
+    }
   };
 
   // Handler for adding a new payment
-  const handleAddPayment = (newPayment: Payment) => {
-    setPayments(prevPayments => {
-      const updatedPayments = [...prevPayments, newPayment];
-      localStorage.setItem('payments', JSON.stringify(updatedPayments));
-      return updatedPayments;
-    });
-    
-    // Update debt status if needed
-    setDebts(prevDebts => {
-      const updatedDebts = prevDebts.map(debt => {
-        if (debt.id === newPayment.debtId) {
-          // If remaining balance is 0 or less, mark as completed
-          if (newPayment.remainingBalance <= 0) {
-            return { ...debt, status: 'completed' as DebtStatus };
-          }
-          // Otherwise mark as in_progress if it was pending
-          if (debt.status === 'pending') {
-            return { ...debt, status: 'in_progress' as DebtStatus };
-          }
-        }
-        return debt;
+  const handleAddPayment = async (newPayment: Omit<Payment, "id">) => {
+    try {
+      const createdPayment = await addPayment(newPayment);
+      setPayments(prevPayments => [...prevPayments, createdPayment]);
+      
+      toast({
+        title: "پرداخت جدید ثبت شد",
+        description: "پرداخت جدید با موفقیت ثبت شد.",
       });
       
-      localStorage.setItem('debts', JSON.stringify(updatedDebts));
-      return updatedDebts;
-    });
+      // Update debt status if needed
+      const debt = debts.find(d => d.id === newPayment.debtId);
+      if (debt) {
+        let newStatus: DebtStatus | null = null;
+        
+        // If remaining balance is 0 or less, mark as completed
+        if (newPayment.remainingBalance <= 0) {
+          newStatus = 'completed';
+        }
+        // Otherwise mark as in_progress if it was pending
+        else if (debt.status === 'pending') {
+          newStatus = 'in_progress';
+        }
+        
+        if (newStatus) {
+          await updateDebtStatus(debt.id, newStatus);
+          
+          // Update local state
+          setDebts(prevDebts => prevDebts.map(d => 
+            d.id === debt.id ? { ...d, status: newStatus as DebtStatus } : d
+          ));
+        }
+      }
+      
+      return createdPayment;
+    } catch (error) {
+      console.error("Error adding payment:", error);
+      toast({
+        variant: "destructive",
+        title: "خطا در ثبت پرداخت",
+        description: "لطفاً دوباره تلاش کنید.",
+      });
+      throw error;
+    }
   };
+
+  // If still loading, show loading indicator
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">در حال بارگذاری...</div>;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

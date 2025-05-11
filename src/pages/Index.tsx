@@ -1,29 +1,49 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import Dashboard from '../components/Dashboard';
-import { useEffect, useState } from 'react';
 import { Debt, Payment } from '../types';
-import { generateMockDebts, generateMockPayments } from '../utils/debtUtils';
+import { fetchDebts, fetchPayments } from '../services/debtService';
+import { useToast } from '../hooks/use-toast';
 
 const Index = () => {
   const [debts, setDebts] = useState<Debt[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
   
-  // Load data from localStorage on component mount
+  // Load data from Supabase on component mount
   useEffect(() => {
-    const storedDebts = localStorage.getItem('debts');
-    const storedPayments = localStorage.getItem('payments');
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const [debtsData, paymentsData] = await Promise.all([
+          fetchDebts(),
+          fetchPayments()
+        ]);
+        
+        setDebts(debtsData);
+        setPayments(paymentsData);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        toast({
+          variant: "destructive",
+          title: "خطا در بارگذاری اطلاعات",
+          description: "لطفاً صفحه را مجدداً بارگذاری کنید.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    if (storedDebts && storedPayments) {
-      setDebts(JSON.parse(storedDebts));
-      setPayments(JSON.parse(storedPayments));
-    } else {
-      // Fallback to mock data if nothing in localStorage
-      setDebts(generateMockDebts());
-      setPayments(generateMockPayments());
-    }
+    loadData();
   }, []);
+  
+  if (isLoading) {
+    return <Layout>
+      <div className="flex items-center justify-center h-64">در حال بارگذاری...</div>
+    </Layout>;
+  }
   
   return (
     <Layout>
