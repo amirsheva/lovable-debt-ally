@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from 'react';
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import DebtPage from "./pages/DebtPage";
@@ -13,6 +15,8 @@ import AddDebtPage from "./pages/AddDebtPage";
 import CalendarPage from "./pages/CalendarPage";
 import ReportsPage from "./pages/ReportsPage"; 
 import SettingsPage from "./pages/SettingsPage";
+import AuthPage from "./pages/AuthPage";
+import AdminPage from "./pages/AdminPage";
 import { Debt, Payment, DebtStatus } from "./types";
 import { useToast } from "./hooks/use-toast";
 import { 
@@ -154,60 +158,92 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route 
-              path="/debts" 
-              element={
-                <DebtsListPage debts={debts} />
-              } 
-            />
-            <Route 
-              path="/add-debt" 
-              element={
-                <AddDebtPage onAddDebt={handleAddDebt} />
-              } 
-            />
-            <Route 
-              path="/debt/:id" 
-              element={
-                <DebtPage 
-                  debts={debts} 
-                  payments={payments}
-                  onAddPayment={handleAddPayment}
-                />
-              } 
-            />
-            <Route 
-              path="/calendar" 
-              element={
-                <CalendarPage 
-                  debts={debts}
-                  payments={payments}
-                />
-              } 
-            />
-            <Route 
-              path="/reports" 
-              element={
-                <ReportsPage 
-                  debts={debts}
-                  payments={payments}
-                />
-              } 
-            />
-            <Route 
-              path="/settings" 
-              element={<SettingsPage />} 
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<AuthPage />} />
+              <Route 
+                path="/" 
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/debts" 
+                element={
+                  <ProtectedRoute>
+                    <DebtsListPage debts={debts} />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/add-debt" 
+                element={
+                  <ProtectedRoute>
+                    <AddDebtPage onAddDebt={handleAddDebt} />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/debt/:id" 
+                element={
+                  <ProtectedRoute>
+                    <DebtPage 
+                      debts={debts} 
+                      payments={payments}
+                      onAddPayment={handleAddPayment}
+                    />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/calendar" 
+                element={
+                  <ProtectedRoute>
+                    <CalendarPage 
+                      debts={debts}
+                      payments={payments}
+                    />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/reports" 
+                element={
+                  <ProtectedRoute>
+                    <ReportsPage 
+                      debts={debts}
+                      payments={payments}
+                    />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/settings" 
+                element={
+                  <ProtectedRoute>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute requiredRoles={['admin', 'god']}>
+                    <AdminPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

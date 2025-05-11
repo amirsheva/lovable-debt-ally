@@ -3,6 +3,7 @@ import React from 'react';
 import { Debt, Payment } from '../types';
 import { formatCurrency } from '../utils/debtUtils';
 import DebtsChart from './charts/DebtsChart';
+import { differenceInDays, parseISO } from 'date-fns';
 import { Wallet, Calendar, ArrowDownCircle, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -27,6 +28,12 @@ const Dashboard: React.FC<DashboardProps> = ({ debts, payments }) => {
     .filter(debt => debt.status !== 'completed')
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
     .slice(0, 3);
+
+  // Calculate days remaining until due date
+  const getDaysRemaining = (dueDate: string): number => {
+    const due = parseISO(dueDate);
+    return differenceInDays(due, today);
+  };
 
   return (
     <div className="space-y-6">
@@ -93,24 +100,34 @@ const Dashboard: React.FC<DashboardProps> = ({ debts, payments }) => {
           </div>
           
           <div className="space-y-3">
-            {upcomingDebts.map((debt) => (
-              <Link to={`/debt/${debt.id}`} key={debt.id} className="block">
-                <div className="p-3 border rounded-lg hover:bg-gray-50">
-                  <div className="flex justify-between">
-                    <div>
-                      <h4 className="font-medium">{debt.description}</h4>
-                      <p className="text-sm text-gray-600">سررسید: {new Date(debt.dueDate).toLocaleDateString('fa-IR')}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-primary">{formatCurrency(debt.installmentAmount)}</p>
-                      <p className="text-xs text-gray-500">
-                        {debt.installments > 0 ? `قسط ${payments.filter(p => p.debtId === debt.id).length + 1} از ${debt.installments}` : "پرداخت کامل"}
-                      </p>
+            {upcomingDebts.map((debt) => {
+              const daysRemaining = getDaysRemaining(debt.dueDate);
+              return (
+                <Link to={`/debt/${debt.id}`} key={debt.id} className="block">
+                  <div className="p-3 border rounded-lg hover:bg-gray-50">
+                    <div className="flex justify-between">
+                      <div>
+                        <h4 className="font-medium">{debt.name || debt.description}</h4>
+                        <p className="text-sm text-gray-600">
+                          سررسید: {new Date(debt.dueDate).toLocaleDateString('fa-IR')}
+                        </p>
+                        <p className={`text-xs ${daysRemaining <= 0 ? 'text-red-500' : (daysRemaining <= 7 ? 'text-amber-500' : 'text-green-600')}`}>
+                          {daysRemaining <= 0 
+                            ? 'زمان پرداخت گذشته است' 
+                            : `${daysRemaining} روز مانده تا سررسید`}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-primary">{formatCurrency(debt.installmentAmount)}</p>
+                        <p className="text-xs text-gray-500">
+                          {debt.installments > 0 ? `قسط ${payments.filter(p => p.debtId === debt.id).length + 1} از ${debt.installments}` : "پرداخت کامل"}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
             
             {upcomingDebts.length === 0 && (
               <div className="text-center p-6">

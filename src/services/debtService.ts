@@ -1,10 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Debt, DebtType, DebtStatus, Payment } from "../types";
-import { format } from "date-fns";
+import { Debt, DebtType, DebtStatus, Payment, Category, Bank, DayNote } from "../types";
 
-// Function to fetch all debts from Supabase
+// Function to fetch all debts from Supabase for the current user
 export const fetchDebts = async (): Promise<Debt[]> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return [];
+
   const { data, error } = await supabase
     .from("debts")
     .select("*");
@@ -17,6 +19,7 @@ export const fetchDebts = async (): Promise<Debt[]> => {
   // Transform from database format to application format
   return (data || []).map(item => ({
     id: item.id,
+    name: item.name,
     amount: Number(item.amount),
     debtType: item.debt_type as DebtType,
     dueDate: item.due_date,
@@ -25,12 +28,17 @@ export const fetchDebts = async (): Promise<Debt[]> => {
     description: item.description,
     status: item.status as DebtStatus,
     createdAt: item.created_at,
-    user_id: item.user_id
+    user_id: item.user_id,
+    category_id: item.category_id,
+    bank_id: item.bank_id
   }));
 };
 
-// Function to fetch all payments from Supabase
+// Function to fetch all payments from Supabase for the current user
 export const fetchPayments = async (): Promise<Payment[]> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return [];
+
   const { data, error } = await supabase
     .from("payments")
     .select("*");
@@ -56,6 +64,7 @@ export const addDebt = async (debt: Omit<Debt, "id" | "createdAt">): Promise<Deb
   const { data, error } = await supabase
     .from("debts")
     .insert({
+      name: debt.name,
       amount: debt.amount,
       debt_type: debt.debtType,
       due_date: debt.dueDate,
@@ -63,6 +72,8 @@ export const addDebt = async (debt: Omit<Debt, "id" | "createdAt">): Promise<Deb
       installment_amount: debt.installmentAmount,
       description: debt.description,
       status: debt.status,
+      category_id: debt.category_id,
+      bank_id: debt.bank_id
     })
     .select()
     .single();
@@ -75,6 +86,7 @@ export const addDebt = async (debt: Omit<Debt, "id" | "createdAt">): Promise<Deb
   // Transform from database format to application format
   return {
     id: data.id,
+    name: data.name,
     amount: Number(data.amount),
     debtType: data.debt_type as DebtType,
     dueDate: data.due_date,
@@ -83,7 +95,9 @@ export const addDebt = async (debt: Omit<Debt, "id" | "createdAt">): Promise<Deb
     description: data.description,
     status: data.status as DebtStatus,
     createdAt: data.created_at,
-    user_id: data.user_id
+    user_id: data.user_id,
+    category_id: data.category_id,
+    bank_id: data.bank_id
   };
 };
 
@@ -129,9 +143,137 @@ export const updateDebtStatus = async (id: string, status: DebtStatus): Promise<
   }
 };
 
+// Function to fetch categories
+export const fetchCategories = async (): Promise<Category[]> => {
+  const { data, error } = await supabase
+    .from("debt_categories")
+    .select("*")
+    .order('name');
+
+  if (error) {
+    console.error("Error fetching categories:", error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+// Function to fetch banks
+export const fetchBanks = async (): Promise<Bank[]> => {
+  const { data, error } = await supabase
+    .from("banks")
+    .select("*")
+    .order('name');
+
+  if (error) {
+    console.error("Error fetching banks:", error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+// Function to add a new category
+export const addCategory = async (name: string, isSystem: boolean = false): Promise<Category> => {
+  const { data, error } = await supabase
+    .from("debt_categories")
+    .insert({ name, is_system: isSystem })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error adding category:", error);
+    throw error;
+  }
+
+  return data;
+};
+
+// Function to add a new bank
+export const addBank = async (name: string, isSystem: boolean = false): Promise<Bank> => {
+  const { data, error } = await supabase
+    .from("banks")
+    .insert({ name, is_system: isSystem })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error adding bank:", error);
+    throw error;
+  }
+
+  return data;
+};
+
+// Function to fetch day notes for a specific date
+export const fetchDayNote = async (date: string): Promise<DayNote | null> => {
+  const { data, error } = await supabase
+    .from("day_notes")
+    .select("*")
+    .eq("date", date)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error fetching day note:", error);
+    throw error;
+  }
+
+  return data || null;
+};
+
+// Function to save a day note
+export const saveDayNote = async (date: string, note: string, id?: string): Promise<DayNote> => {
+  if (id) {
+    // Update existing note
+    const { data, error } = await supabase
+      .from("day_notes")
+      .update({ note })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating day note:", error);
+      throw error;
+    }
+
+    return data;
+  } else {
+    // Insert new note
+    const { data, error } = await supabase
+      .from("day_notes")
+      .insert({ date, note })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error adding day note:", error);
+      throw error;
+    }
+
+    return data;
+  }
+};
+
+// Function to delete a day note
+export const deleteDayNote = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from("day_notes")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error deleting day note:", error);
+    throw error;
+  }
+};
+
 // Function to migrate existing data from localStorage to Supabase
 export const migrateLocalStorageToSupabase = async (): Promise<void> => {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return; // Only migrate if user is logged in
+
     // Load mock data from localStorage
     const storedDebts = localStorage.getItem('debts');
     const storedPayments = localStorage.getItem('payments');
@@ -147,6 +289,7 @@ export const migrateLocalStorageToSupabase = async (): Promise<void> => {
           // Insert each debt into Supabase
           await supabase.from('debts').insert({
             id: debt.id, // Preserve original ID for reference
+            name: debt.name || debt.description.substring(0, 50), // Use description as name if not provided
             amount: debt.amount,
             debt_type: debt.debtType,
             due_date: debt.dueDate,

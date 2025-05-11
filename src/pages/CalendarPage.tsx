@@ -1,10 +1,13 @@
 
-import React, { useState } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isEqual, parseISO } from 'date-fns';
-import { Calendar as CalendarIcon, ArrowLeft, ArrowRight } from 'lucide-react';
-import { Debt, Payment } from '../types';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { formatCurrency } from '../utils/debtUtils';
+import CalendarDay from '../components/CalendarDay';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { format, parse, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, addDays, isSameMonth, isSameDay } from 'date-fns-jalali';
+import { Debt, Payment } from '../types';
 
 interface CalendarPageProps {
   debts: Debt[];
@@ -12,163 +15,202 @@ interface CalendarPageProps {
 }
 
 const CalendarPage: React.FC<CalendarPageProps> = ({ debts, payments }) => {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [daysWithDebts, setDaysWithDebts] = useState<Record<string, number>>({});
   
-  // Generate days for the current month
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
-  const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
-
-  // Get all due dates in this month
-  const datesWithPayments = days.map(day => {
-    const formattedDate = format(day, 'yyyy-MM-dd');
+  useEffect(() => {
+    // Calculate days with debts
+    const debtDays: Record<string, number> = {};
     
-    // Find debts due on this date
-    const dueDebts = debts.filter(debt => {
-      // For monthly installments, check if any installment is due on this day of month
-      const dueDate = parseISO(debt.dueDate);
-      if (format(day, 'dd') === format(dueDate, 'dd') && 
-          debt.status !== 'completed' && 
-          day >= new Date()) {
-        return true;
+    debts.forEach(debt => {
+      const dateStr = debt.dueDate;
+      if (debtDays[dateStr]) {
+        debtDays[dateStr]++;
+      } else {
+        debtDays[dateStr] = 1;
       }
-      // Exact match for one-time payments
-      return debt.dueDate === formattedDate && debt.status !== 'completed';
     });
     
-    // Find payments made on this date
-    const dayPayments = payments.filter(payment => {
-      return payment.paymentDate === formattedDate;
-    });
+    setDaysWithDebts(debtDays);
+  }, [debts]);
+  
+  const goToNextMonth = () => {
+    setCurrentDate(addMonths(currentDate, 1));
+  };
+  
+  const goToPreviousMonth = () => {
+    setCurrentDate(subMonths(currentDate, 1));
+  };
+  
+  const getCalendarDays = () => {
+    // Get the first and last day of the month
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
     
-    return {
-      date: day,
-      debts: dueDebts,
-      payments: dayPayments,
-      hasEvent: dueDebts.length > 0 || dayPayments.length > 0
-    };
-  });
-
-  const nextMonth = () => {
-    setCurrentMonth(current => {
-      const next = new Date(current);
-      next.setMonth(current.getMonth() + 1);
-      return next;
-    });
+    // Get an array of days in the month
+    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    
+    // Get the day of the week for the first day (0 = Sunday, 1 = Monday, etc.)
+    let firstDayOfWeek = monthStart.getDay();
+    if (firstDayOfWeek === 6) { // If Saturday, we start from the previous week
+      firstDayOfWeek = -1;
+    }
+    
+    // Create an array for the previous month's days
+    const previousMonthDays = [];
+    for (let i = firstDayOfWeek; i >= 0; i--) {
+      previousMonthDays.push(subMonths(addDays(monthStart, -i), 0));
+    }
+    
+    // Calculate how many days we need to add from the next month
+    const totalDaysInCalendar = 42; // 6 rows x 7 days
+    const remainingDays = totalDaysInCalendar - (previousMonthDays.length + days.length);
+    
+    // Create an array for the next month's days
+    const nextMonthDays = [];
+    for (let i = 1; i <= remainingDays; i++) {
+      nextMonthDays.push(addDays(monthEnd, i));
+    }
+    
+    // Combine all days
+    return [...previousMonthDays, ...days, ...nextMonthDays];
   };
-
-  const prevMonth = () => {
-    setCurrentMonth(current => {
-      const prev = new Date(current);
-      prev.setMonth(current.getMonth() - 1);
-      return prev;
-    });
-  };
-
+  
+  const weekdays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+  
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">تقویم پرداخت‌ها</h1>
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold">تقویم پرداخت</h1>
         
-        {/* Calendar Header */}
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center">
-            <CalendarIcon className="h-5 w-5 ml-2 text-primary" />
-            <h2 className="text-xl font-semibold">
-              {format(currentMonth, 'MMMM yyyy')}
-            </h2>
-          </div>
-          <div className="flex gap-2">
-            <button 
-              onClick={prevMonth}
-              className="p-1 rounded-full hover:bg-gray-100"
-            >
-              <ArrowRight className="h-5 w-5" />
-            </button>
-            <button
-              onClick={nextMonth}
-              className="p-1 rounded-full hover:bg-gray-100"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-        
-        {/* Calendar Grid */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          {/* Day Headers */}
-          <div className="grid grid-cols-7 gap-px border-b">
-            {['یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه', 'شنبه'].map((day, i) => (
-              <div key={i} className="py-2 text-center text-sm font-medium">
-                {day}
-              </div>
-            ))}
-          </div>
-          
-          {/* Days */}
-          <div className="grid grid-cols-7 gap-px bg-gray-100">
-            {datesWithPayments.map((dayInfo, i) => (
-              <div 
-                key={i} 
-                className={`min-h-24 p-2 bg-white ${
-                  isEqual(dayInfo.date, new Date()) ? 'bg-blue-50' : ''
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <span className={`text-sm font-medium ${
-                    isEqual(dayInfo.date, new Date()) ? 'text-primary' : ''
-                  }`}>
-                    {format(dayInfo.date, 'd')}
-                  </span>
-                  
-                  {dayInfo.hasEvent && (
-                    <span className="h-2 w-2 rounded-full bg-primary"></span>
-                  )}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" onClick={goToPreviousMonth}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <CardTitle>{format(currentDate, 'MMMM yyyy')}</CardTitle>
+              <Button variant="ghost" onClick={goToNextMonth}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-2 mb-2">
+              {weekdays.map((day) => (
+                <div key={day} className="text-center font-medium text-sm py-2">
+                  {day}
                 </div>
+              ))}
+            </div>
+            
+            <div className="grid grid-cols-7 gap-2">
+              {getCalendarDays().map((date) => {
+                const dateStr = format(date, 'yyyy-MM-dd');
+                const hasDebts = !!daysWithDebts[dateStr];
+                const debtsCount = daysWithDebts[dateStr] || 0;
                 
-                {/* Debts due on this day */}
-                {dayInfo.debts.length > 0 && (
-                  <div className="mt-2">
-                    {dayInfo.debts.map(debt => (
-                      <div key={debt.id} className="text-xs p-1 bg-yellow-50 rounded mb-1 border-r-2 border-yellow-500">
-                        <div className="font-medium truncate">{debt.description}</div>
-                        <div className="text-primary">{formatCurrency(debt.installmentAmount)}</div>
-                      </div>
-                    ))}
+                return (
+                  <div 
+                    key={dateStr} 
+                    className={`aspect-square min-h-14 ${
+                      !isSameMonth(date, currentDate) ? 'opacity-40' : ''
+                    }`}
+                  >
+                    <CalendarDay
+                      date={date}
+                      isToday={isSameDay(date, new Date())}
+                      isSelected={selectedDate ? isSameDay(date, selectedDate) : false}
+                      hasDebts={hasDebts}
+                      debtsCount={debtsCount}
+                      onClick={() => setSelectedDate(date)}
+                    />
                   </div>
-                )}
-                
-                {/* Payments made on this day */}
-                {dayInfo.payments.length > 0 && (
-                  <div className="mt-1">
-                    {dayInfo.payments.map(payment => {
-                      // Find the debt related to this payment
-                      const relatedDebt = debts.find(d => d.id === payment.debtId);
-                      return (
-                        <div key={payment.id} className="text-xs p-1 bg-green-50 rounded mb-1 border-r-2 border-green-500">
-                          <div className="font-medium truncate">{relatedDebt?.description || 'پرداخت'}</div>
-                          <div className="text-green-600">{formatCurrency(payment.paymentAmount)}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
         
-        {/* Legend */}
-        <div className="flex gap-4 mt-4 text-xs text-gray-600">
-          <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-yellow-500 ml-1"></div>
-            <span>سررسید پرداخت</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-green-500 ml-1"></div>
-            <span>پرداخت انجام شده</span>
-          </div>
-        </div>
+        {selectedDate && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{format(selectedDate, 'PPPP')}</CardTitle>
+              <CardDescription>بدهی‌ها و پرداخت‌های این روز</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {(() => {
+                  const dateStr = format(selectedDate, 'yyyy-MM-dd');
+                  const dayDebts = debts.filter(debt => debt.dueDate === dateStr);
+                  const dayPayments = payments.filter(payment => payment.paymentDate === dateStr);
+                  
+                  return (
+                    <>
+                      <div>
+                        <h3 className="font-medium mb-2">بدهی‌های سررسید</h3>
+                        {dayDebts.length > 0 ? (
+                          <div className="space-y-2">
+                            {dayDebts.map(debt => (
+                              <div key={debt.id} className="p-3 border rounded-lg">
+                                <div className="flex justify-between">
+                                  <div>
+                                    <h4 className="font-medium">{debt.name || debt.description}</h4>
+                                    <p className="text-sm text-gray-600">{debt.description}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="font-bold">{new Intl.NumberFormat('fa-IR').format(debt.installmentAmount)} تومان</p>
+                                    <p className="text-xs text-gray-500">
+                                      {debt.status === 'completed' ? 'تکمیل شده' : debt.status === 'in_progress' ? 'در حال پرداخت' : 'در انتظار'}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500">هیچ بدهی سررسیدی برای این روز وجود ندارد.</p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-medium mb-2">پرداخت‌های انجام شده</h3>
+                        {dayPayments.length > 0 ? (
+                          <div className="space-y-2">
+                            {dayPayments.map(payment => {
+                              const relatedDebt = debts.find(d => d.id === payment.debtId);
+                              return (
+                                <div key={payment.id} className="p-3 border rounded-lg bg-green-50">
+                                  <div className="flex justify-between">
+                                    <div>
+                                      <h4 className="font-medium">{relatedDebt?.name || relatedDebt?.description || 'پرداخت'}</h4>
+                                      <p className="text-sm text-gray-600">پرداخت انجام شده</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="font-bold text-green-600">
+                                        {new Intl.NumberFormat('fa-IR').format(payment.paymentAmount)} تومان
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        مانده: {new Intl.NumberFormat('fa-IR').format(payment.remainingBalance)} تومان
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500">هیچ پرداختی برای این روز ثبت نشده است.</p>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </Layout>
   );
