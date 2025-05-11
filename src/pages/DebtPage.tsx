@@ -7,7 +7,7 @@ import { Debt, Payment } from '../types';
 interface DebtPageProps {
   debts: Debt[];
   payments: Payment[];
-  onAddPayment: (payment: Payment) => void;
+  onAddPayment: (payment: Omit<Payment, "id">) => Promise<Payment>;
 }
 
 const DebtPage: React.FC<DebtPageProps> = ({ debts, payments, onAddPayment }) => {

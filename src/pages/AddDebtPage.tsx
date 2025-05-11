@@ -5,7 +5,7 @@ import AddDebtForm from '../components/AddDebtForm';
 import { Debt } from '../types';
 
 interface AddDebtPageProps {
-  onAddDebt: (debt: Debt) => void;
+  onAddDebt: (debt: Omit<Debt, "id" | "createdAt">) => Promise<Debt>;
 }
 
 const AddDebtPage: React.FC<AddDebtPageProps> = ({ onAddDebt }) => {
