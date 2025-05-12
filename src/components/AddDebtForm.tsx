@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -78,26 +77,32 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
   useEffect(() => {
     const fetchCategoriesAndBanks = async () => {
       if (settings.enabledFeatures.categories) {
-        // Use our custom query utility for debt_categories
-        const result = await queryCustomTable<Category>('debt_categories')
-          .select('*')
-          .order('name')
-          .get();
-          
-        if (result && result.data) {
-          setCategories(result.data as Category[]);
+        try {
+          // Use our custom query utility for debt_categories
+          const { data, error } = await queryCustomTable<Category>('debt_categories')
+            .select('*')
+            .order('name')
+            .get();
+            
+          if (error) throw error;
+          setCategories(Array.isArray(data) ? data : []);
+        } catch (error) {
+          console.error('Error fetching categories:', error);
         }
       }
       
       if (settings.enabledFeatures.banks) {
-        // Use our custom query utility for banks
-        const result = await queryCustomTable<Bank>('banks')
-          .select('*')
-          .order('name')
-          .get();
-          
-        if (result && result.data) {
-          setBanks(result.data as Bank[]);
+        try {
+          // Use our custom query utility for banks
+          const { data, error } = await queryCustomTable<Bank>('banks')
+            .select('*')
+            .order('name')
+            .get();
+            
+          if (error) throw error;
+          setBanks(Array.isArray(data) ? data : []);
+        } catch (error) {
+          console.error('Error fetching banks:', error);
         }
       }
     };

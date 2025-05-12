@@ -52,13 +52,13 @@ const SettingsPage: React.FC = () => {
     
     const loadCategories = async () => {
       try {
-        const { data, error } = await queryCustomTable('debt_categories')
+        const { data, error } = await queryCustomTable<Category>('debt_categories')
           .select('*')
           .order('is_system', { ascending: false })
-          .order('name');
+          .get();
         
         if (error) throw error;
-        setCategories(data as Category[]);
+        setCategories(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error loading categories:', error);
         toast({
@@ -71,13 +71,13 @@ const SettingsPage: React.FC = () => {
     
     const loadBanks = async () => {
       try {
-        const { data, error } = await queryCustomTable('banks')
+        const { data, error } = await queryCustomTable<Bank>('banks')
           .select('*')
           .order('is_system', { ascending: false })
-          .order('name');
+          .get();
         
         if (error) throw error;
-        setBanks(data as Bank[]);
+        setBanks(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error loading banks:', error);
         toast({
@@ -133,10 +133,8 @@ const SettingsPage: React.FC = () => {
     if (!newCategoryName.trim()) return;
     
     try {
-      const { data, error } = await queryCustomTable('debt_categories')
-        .insert({ name: newCategoryName, is_system: isAdmin ? true : false })
-        .select()
-        .single();
+      const { data, error } = await queryCustomTable<Category>('debt_categories')
+        .insert({ name: newCategoryName, is_system: isAdmin ? true : false });
         
       if (error) throw error;
       
@@ -161,10 +159,8 @@ const SettingsPage: React.FC = () => {
     if (!newBankName.trim()) return;
     
     try {
-      const { data, error } = await queryCustomTable('banks')
-        .insert({ name: newBankName, is_system: isAdmin ? true : false })
-        .select()
-        .single();
+      const { data, error } = await queryCustomTable<Bank>('banks')
+        .insert({ name: newBankName, is_system: isAdmin ? true : false });
         
       if (error) throw error;
       
@@ -189,7 +185,7 @@ const SettingsPage: React.FC = () => {
     if (!editCategoryId || !editCategoryName.trim()) return;
     
     try {
-      const { error } = await queryCustomTable('debt_categories')
+      const { error } = await queryCustomTable<Category>('debt_categories')
         .update({ name: editCategoryName })
         .eq('id', editCategoryId);
         
@@ -220,7 +216,7 @@ const SettingsPage: React.FC = () => {
     if (!editBankId || !editBankName.trim()) return;
     
     try {
-      const { error } = await queryCustomTable('banks')
+      const { error } = await queryCustomTable<Bank>('banks')
         .update({ name: editBankName })
         .eq('id', editBankId);
         
@@ -249,7 +245,7 @@ const SettingsPage: React.FC = () => {
   
   const handleDeleteCategory = async (id: string) => {
     try {
-      const { error } = await queryCustomTable('debt_categories')
+      const { error } = await queryCustomTable<Category>('debt_categories')
         .delete()
         .eq('id', id);
         
@@ -273,7 +269,7 @@ const SettingsPage: React.FC = () => {
   
   const handleDeleteBank = async (id: string) => {
     try {
-      const { error } = await queryCustomTable('banks')
+      const { error } = await queryCustomTable<Bank>('banks')
         .delete()
         .eq('id', id);
         

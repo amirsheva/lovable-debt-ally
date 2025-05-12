@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -27,6 +26,9 @@ interface CalendarDayProps {
 interface DayNoteData {
   id: string;
   note: string;
+  date: string; // Add date property to match the expected shape
+  user_id?: string;
+  created_at?: string;
 }
 
 const CalendarDay: React.FC<CalendarDayProps> = ({
@@ -88,7 +90,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
           
         if (error) throw error;
       } else {
-        // Insert new note
+        // Insert new note with proper date property
         const { error } = await queryCustomTable<DayNoteData>('day_notes')
           .insert({ date: formattedDate, note });
           

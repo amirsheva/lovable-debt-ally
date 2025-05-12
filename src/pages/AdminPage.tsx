@@ -43,11 +43,11 @@ const AdminPage = () => {
         setIsLoading(true);
         
         // First get all users from profiles
-        const profilesResult = await queryCustomTable<UserProfile>('profiles')
+        const { data: profilesData, error: profilesError } = await queryCustomTable<UserProfile>('profiles')
           .select('id, full_name')
           .get();
           
-        if (!profilesResult || profilesResult.error) throw profilesResult?.error;
+        if (profilesError) throw profilesError;
         
         // Then get user emails from auth.users (needs admin rights)
         const { data: authData, error: authError } = await supabase
@@ -59,16 +59,16 @@ const AdminPage = () => {
         }
         
         // Then get all user roles
-        const rolesResult = await queryCustomTable<UserRoleData>('user_roles')
+        const { data: rolesData, error: rolesError } = await queryCustomTable<UserRoleData>('user_roles')
           .select('user_id, role')
           .get();
           
-        if (!rolesResult || rolesResult.error) throw rolesResult?.error;
+        if (rolesError) throw rolesError;
         
         // Ensure we have arrays to work with, even if empty
-        const profilesArray = Array.isArray(profilesResult.data) ? profilesResult.data : [];
+        const profilesArray = Array.isArray(profilesData) ? profilesData : [];
         const authDataArray = Array.isArray(authData) ? authData : [];
-        const rolesArray = Array.isArray(rolesResult.data) ? rolesResult.data : [];
+        const rolesArray = Array.isArray(rolesData) ? rolesData : [];
         
         // Combine the data with proper type safety
         const userData: AdminUser[] = profilesArray.map((profile) => {
