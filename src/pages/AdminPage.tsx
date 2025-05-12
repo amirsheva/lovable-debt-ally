@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '../components/Layout';
@@ -64,9 +63,9 @@ const AdminPage = () => {
         if (rolesError) throw rolesError;
         
         // Ensure we have arrays to work with, even if empty
-        const profilesArray = (profiles || []) as unknown as UserProfile[];
-        const authDataArray = (authData || []) as unknown as AuthUserData[];
-        const rolesArray = (roles || []) as unknown as UserRoleData[];
+        const profilesArray = profiles ? (profiles as unknown as UserProfile[]) : [];
+        const authDataArray = authData ? (authData as unknown as AuthUserData[]) : [];
+        const rolesArray = roles ? (roles as unknown as UserRoleData[]) : [];
         
         // Combine the data with proper type safety
         const userData: AdminUser[] = profilesArray.map((profile) => {
