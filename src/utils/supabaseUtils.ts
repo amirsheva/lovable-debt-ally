@@ -1,5 +1,4 @@
 
-
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -21,4 +20,3 @@ export const queryCustomTable = (tableName: string) => {
 export const hasField = <T>(obj: T, field: string): boolean => {
   return obj !== null && obj !== undefined && Object.prototype.hasOwnProperty.call(obj, field);
 };
-

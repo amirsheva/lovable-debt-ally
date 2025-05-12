@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Debt, DebtType, DebtStatus, Payment, Category, Bank, DayNote } from "../types";
 import { queryCustomTable } from "@/utils/supabaseUtils";
@@ -19,7 +20,7 @@ export const fetchDebts = async (): Promise<Debt[]> => {
   // Transform from database format to application format
   return (data || []).map(item => ({
     id: item.id,
-    name: item.name as string | undefined,
+    name: (item as any).name as string | undefined,
     amount: Number(item.amount),
     debtType: item.debt_type as DebtType,
     dueDate: item.due_date,
@@ -86,7 +87,7 @@ export const addDebt = async (debt: Omit<Debt, "id" | "createdAt">): Promise<Deb
   // Transform from database format to application format
   return {
     id: data.id,
-    name: data.name as string | undefined,
+    name: (data as any).name as string | undefined,
     amount: Number(data.amount),
     debtType: data.debt_type as DebtType,
     dueDate: data.due_date,
