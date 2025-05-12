@@ -15,10 +15,24 @@ export const queryCustomTable = <T extends Record<string, any> = Record<string, 
         maybeSingle: () => Promise<{ data: T | null; error: any }>;
         get: () => Promise<{ data: T[] | null; error: any }>;
       };
+      order: (column: string, options?: { ascending?: boolean }) => {
+        get: () => Promise<{ data: T[] | null; error: any }>;
+      };
+      get: () => Promise<{ data: T[] | null; error: any }>;
       insert: (values: Partial<T> | Partial<T>[]) => Promise<{ data: T | null; error: any }>;
       update: (values: Partial<T>) => {
         eq: (column: string, value: any) => Promise<{ data: T | null; error: any }>;
       };
+      delete: () => {
+        eq: (column: string, value: any) => Promise<{ data: T | null; error: any }>;
+      };
+    };
+    insert: (values: Partial<T> | Partial<T>[]) => Promise<{ data: T | null; error: any }>;
+    update: (values: Partial<T>) => {
+      eq: (column: string, value: any) => Promise<{ data: T | null; error: any }>;
+    };
+    delete: () => {
+      eq: (column: string, value: any) => Promise<{ data: T | null; error: any }>;
     };
   };
 };

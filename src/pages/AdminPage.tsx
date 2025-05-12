@@ -44,7 +44,8 @@ const AdminPage = () => {
         
         // First get all users from profiles
         const { data: profiles, error: profilesError } = await queryCustomTable<UserProfile>('profiles')
-          .select('id, full_name').get();
+          .select('id, full_name')
+          .get();
           
         if (profilesError) throw profilesError;
         
@@ -59,7 +60,8 @@ const AdminPage = () => {
         
         // Then get all user roles
         const { data: roles, error: rolesError } = await queryCustomTable<UserRoleData>('user_roles')
-          .select('user_id, role').get();
+          .select('user_id, role')
+          .get();
           
         if (rolesError) throw rolesError;
         
