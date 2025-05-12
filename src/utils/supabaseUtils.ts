@@ -7,8 +7,20 @@ import { supabase } from "@/integrations/supabase/client";
  * @returns A query builder for the specified table with proper type casting
  */
 export const queryCustomTable = <T extends Record<string, any> = Record<string, any>>(tableName: string) => {
-  // More robust type assertion for dynamic table names
-  return supabase.from(tableName as any) as any;
+  // Cast both the table name and return type for better TypeScript compatibility
+  return supabase.from(tableName) as unknown as {
+    select: (columns?: string) => {
+      eq: (column: string, value: any) => {
+        single: () => Promise<{ data: T | null; error: any }>;
+        maybeSingle: () => Promise<{ data: T | null; error: any }>;
+        get: () => Promise<{ data: T[] | null; error: any }>;
+      };
+      insert: (values: Partial<T> | Partial<T>[]) => Promise<{ data: T | null; error: any }>;
+      update: (values: Partial<T>) => {
+        eq: (column: string, value: any) => Promise<{ data: T | null; error: any }>;
+      };
+    };
+  };
 };
 
 /**
