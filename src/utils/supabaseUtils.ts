@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const queryCustomTable = <T extends Record<string, any> = Record<string, any>>(tableName: string) => {
   // Create a type-safe query builder for tables that might not be fully defined in types
-  return supabase.from(tableName) as any;
+  // Use a more aggressive type assertion to bypass TypeScript's limitations with dynamic table names
+  return supabase.from(tableName as never) as any;
 };
 
 /**
