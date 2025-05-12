@@ -51,7 +51,7 @@ const AdminPage = () => {
         
         // Then get user emails from auth.users (needs admin rights)
         const { data: authData, error: authError } = await supabase
-          .rpc('get_users_data'); // This RPC needs to be created by a Supabase admin
+          .rpc('get_users_data');
           
         if (authError) {
           console.error('Error fetching user emails:', authError);
@@ -67,7 +67,7 @@ const AdminPage = () => {
         
         // Ensure we have arrays to work with, even if empty
         const profilesArray = profilesData ?? [];
-        const authDataArray = (authData as AuthUserData[]) ?? [];
+        const authDataArray = (authData || []) as AuthUserData[];
         const rolesArray = rolesData ?? [];
         
         // Combine the data with proper type safety
