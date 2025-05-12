@@ -24,8 +24,12 @@ interface AuthUserData {
   email: string;
 }
 
+interface AdminUser extends User {
+  role: AppUserRole;
+}
+
 const AdminPage = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   
@@ -61,7 +65,7 @@ const AdminPage = () => {
         const rolesArray = roles as UserRoleData[] || [];
         
         // Combine the data with proper type safety
-        const userData = profilesArray.map((profile) => {
+        const userData: AdminUser[] = profilesArray.map((profile) => {
           // Find email from auth data
           const authUser = authDataArray.find((u) => u.id === profile.id);
           const userEmail = authUser ? authUser.email : '';
