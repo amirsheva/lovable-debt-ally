@@ -39,10 +39,20 @@ const AdminPage = () => {
           
         if (rolesError) throw rolesError;
         
-        // Combine the data
-        const userData = profiles.map((profile: any) => {
-          const userEmail = authData ? authData.find((u: any) => u.id === profile.id)?.email : '';
-          const userRole = roles ? roles.find((r: any) => r.user_id === profile.id)?.role || 'user' : 'user';
+        // Ensure we have arrays to work with, even if empty
+        const profilesArray = profiles || [];
+        const authDataArray = authData || [];
+        const rolesArray = roles || [];
+        
+        // Combine the data with proper type safety
+        const userData = profilesArray.map((profile: any) => {
+          // Find email from auth data
+          const authUser = authDataArray.find((u: any) => u.id === profile.id);
+          const userEmail = authUser ? authUser.email : '';
+          
+          // Find role from roles data
+          const userRoleObj = rolesArray.find((r: any) => r.user_id === profile.id);
+          const userRole = userRoleObj ? userRoleObj.role : 'user';
           
           return {
             id: profile.id,
