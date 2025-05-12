@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { User, UserRole } from '../types';
+import { queryCustomTable } from '@/utils/supabaseUtils';
 
 interface AuthContextType {
   user: User | null;
@@ -35,8 +36,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // Fetch user role
           setTimeout(async () => {
             try {
-              const { data, error } = await supabase
-                .from('user_roles')
+              const { data, error } = await queryCustomTable('user_roles')
                 .select('role')
                 .eq('user_id', userData.id)
                 .single();
@@ -47,15 +47,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 // If no role found, set default to 'user'
                 if (!data.role) {
                   // Insert default role
-                  await supabase
-                    .from('user_roles')
+                  await queryCustomTable('user_roles')
                     .insert({ user_id: userData.id, role: 'user' });
                   setUserRole('user');
                 }
               } else {
                 // If no role found, set default to 'user'
-                await supabase
-                  .from('user_roles')
+                await queryCustomTable('user_roles')
                   .insert({ user_id: userData.id, role: 'user' });
                 setUserRole('user');
               }
@@ -87,8 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(userData);
           
           // Fetch user role
-          const { data, error } = await supabase
-            .from('user_roles')
+          const { data, error } = await queryCustomTable('user_roles')
             .select('role')
             .eq('user_id', userData.id)
             .single();
@@ -97,8 +94,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setUserRole(data.role as UserRole);
           } else {
             // If no role found, set default to 'user'
-            await supabase
-              .from('user_roles')
+            await queryCustomTable('user_roles')
               .insert({ user_id: userData.id, role: 'user' });
             setUserRole('user');
           }

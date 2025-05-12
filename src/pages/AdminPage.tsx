@@ -3,10 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '../components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { User, UserRole } from '../types';
+import { queryCustomTable } from '@/utils/supabaseUtils';
 
 const AdminPage = () => {
   const [users, setUsers] = useState<(User & { role: UserRole })[]>([]);
@@ -35,8 +35,7 @@ const AdminPage = () => {
         }
         
         // Then get all user roles
-        const { data: roles, error: rolesError } = await supabase
-          .from('user_roles')
+        const { data: roles, error: rolesError } = await queryCustomTable('user_roles')
           .select('user_id, role');
           
         if (rolesError) throw rolesError;
@@ -73,8 +72,7 @@ const AdminPage = () => {
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     try {
       // Update role in the database
-      const { error } = await supabase
-        .from('user_roles')
+      const { error } = await queryCustomTable('user_roles')
         .update({ role: newRole })
         .eq('user_id', userId);
         

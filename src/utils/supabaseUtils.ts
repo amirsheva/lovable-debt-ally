@@ -10,3 +10,14 @@ export const queryCustomTable = (tableName: string) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return supabase.from(tableName) as any;
 };
+
+/**
+ * Check if a field exists in a table
+ * This is useful for dealing with tables that might not be fully defined in types
+ * @param obj The object to check
+ * @param field The field to check for
+ */
+export const hasField = <T>(obj: T, field: string): boolean => {
+  return obj !== null && obj !== undefined && Object.prototype.hasOwnProperty.call(obj, field);
+};
+
