@@ -4,11 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 /**
  * Utility function for making queries to tables not defined in the Supabase types
  * @param tableName The name of the table to query
+ * @returns A query builder for the specified table with proper type casting
  */
-export const queryCustomTable = (tableName: string) => {
+export const queryCustomTable = <T = any>(tableName: string) => {
   // Use a more explicit type assertion that correctly bypasses TypeScript's type checking
   // for dynamic table names while still returning a usable query builder
-  return supabase.from(tableName as any);
+  return supabase.from(tableName as any) as unknown as ReturnType<typeof supabase.from<T>>;
 };
 
 /**

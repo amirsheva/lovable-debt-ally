@@ -12,6 +12,11 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
+interface UserRoleData {
+  user_id: string;
+  role: UserRole;
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -36,24 +41,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // Fetch user role
           setTimeout(async () => {
             try {
-              const { data, error } = await queryCustomTable('user_roles')
+              const { data, error } = await queryCustomTable<UserRoleData>('user_roles')
                 .select('role')
                 .eq('user_id', userData.id)
                 .single();
 
               if (data && !error) {
-                setUserRole(data.role as UserRole);
+                setUserRole((data as UserRoleData).role as UserRole);
                 
                 // If no role found, set default to 'user'
-                if (!data.role) {
+                if (!(data as UserRoleData).role) {
                   // Insert default role
-                  await queryCustomTable('user_roles')
+                  await queryCustomTable<UserRoleData>('user_roles')
                     .insert({ user_id: userData.id, role: 'user' });
                   setUserRole('user');
                 }
               } else {
                 // If no role found, set default to 'user'
-                await queryCustomTable('user_roles')
+                await queryCustomTable<UserRoleData>('user_roles')
                   .insert({ user_id: userData.id, role: 'user' });
                 setUserRole('user');
               }
@@ -85,16 +90,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(userData);
           
           // Fetch user role
-          const { data, error } = await queryCustomTable('user_roles')
+          const { data, error } = await queryCustomTable<UserRoleData>('user_roles')
             .select('role')
             .eq('user_id', userData.id)
             .single();
 
           if (data && !error) {
-            setUserRole(data.role as UserRole);
+            setUserRole((data as UserRoleData).role as UserRole);
           } else {
             // If no role found, set default to 'user'
-            await queryCustomTable('user_roles')
+            await queryCustomTable<UserRoleData>('user_roles')
               .insert({ user_id: userData.id, role: 'user' });
             setUserRole('user');
           }

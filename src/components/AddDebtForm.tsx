@@ -79,7 +79,7 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
     const fetchCategoriesAndBanks = async () => {
       if (settings.enabledFeatures.categories) {
         // Use our custom query utility for debt_categories
-        const { data: categoriesData } = await queryCustomTable('debt_categories')
+        const { data: categoriesData } = await queryCustomTable<Category>('debt_categories')
           .select('*')
           .order('name');
           
@@ -90,7 +90,7 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
       
       if (settings.enabledFeatures.banks) {
         // Use our custom query utility for banks
-        const { data: banksData } = await queryCustomTable('banks')
+        const { data: banksData } = await queryCustomTable<Bank>('banks')
           .select('*')
           .order('name');
           

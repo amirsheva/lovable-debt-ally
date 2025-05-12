@@ -34,16 +34,16 @@ interface AdminUser extends User {
 
 const AdminPage = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        setLoading(true);
+        setIsLoading(true);
         
         // First get all users from profiles
-        const { data: profiles, error: profilesError } = await queryCustomTable('profiles')
+        const { data: profiles, error: profilesError } = await queryCustomTable<UserProfile>('profiles')
           .select('id, full_name');
           
         if (profilesError) throw profilesError;
@@ -58,15 +58,15 @@ const AdminPage = () => {
         }
         
         // Then get all user roles
-        const { data: roles, error: rolesError } = await queryCustomTable('user_roles')
+        const { data: roles, error: rolesError } = await queryCustomTable<UserRoleData>('user_roles')
           .select('user_id, role');
           
         if (rolesError) throw rolesError;
         
         // Ensure we have arrays to work with, even if empty
-        const profilesArray = profiles as UserProfile[] || [];
-        const authDataArray = authData as AuthUserData[] || [];
-        const rolesArray = roles as UserRoleData[] || [];
+        const profilesArray = (profiles || []) as UserProfile[];
+        const authDataArray = (authData || []) as AuthUserData[];
+        const rolesArray = (roles || []) as UserRoleData[];
         
         // Combine the data with proper type safety
         const userData: AdminUser[] = profilesArray.map((profile) => {
@@ -97,7 +97,7 @@ const AdminPage = () => {
           description: 'مشکلی در بارگذاری اطلاعات کاربران رخ داده است.',
         });
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
     
@@ -107,7 +107,7 @@ const AdminPage = () => {
   const handleRoleChange = async (userId: string, newRole: AppUserRole) => {
     try {
       // Update role in the database
-      const { error } = await queryCustomTable('user_roles')
+      const { error } = await queryCustomTable<UserRoleData>('user_roles')
         .update({ role: newRole })
         .eq('user_id', userId);
         
