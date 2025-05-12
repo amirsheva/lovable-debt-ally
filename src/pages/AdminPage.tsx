@@ -72,13 +72,13 @@ const AdminPage = () => {
           
           // Find role from roles data
           const userRoleObj = rolesArray.find((r) => r.user_id === profile.id);
-          const userRole = userRoleObj ? userRoleObj.role : 'user';
+          const userRole = userRoleObj ? userRoleObj.role as AppUserRole : 'user' as AppUserRole;
           
           return {
             id: profile.id,
             email: userEmail || 'Email hidden',
             full_name: profile.full_name || 'Unknown',
-            role: userRole as AppUserRole
+            role: userRole
           };
         });
         
