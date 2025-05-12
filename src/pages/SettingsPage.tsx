@@ -58,7 +58,9 @@ const SettingsPage: React.FC = () => {
           .get();
         
         if (error) throw error;
-        setCategories(Array.isArray(data) ? data : []);
+        if (data) {
+          setCategories(data);
+        }
       } catch (error) {
         console.error('Error loading categories:', error);
         toast({
@@ -77,7 +79,9 @@ const SettingsPage: React.FC = () => {
           .get();
         
         if (error) throw error;
-        setBanks(Array.isArray(data) ? data : []);
+        if (data) {
+          setBanks(data);
+        }
       } catch (error) {
         console.error('Error loading banks:', error);
         toast({
@@ -138,13 +142,15 @@ const SettingsPage: React.FC = () => {
         
       if (error) throw error;
       
-      setCategories([...categories, data as Category]);
-      setNewCategoryName('');
-      
-      toast({
-        title: 'دسته‌بندی اضافه شد',
-        description: 'دسته‌بندی جدید با موفقیت اضافه شد.',
-      });
+      if (data && data[0]) {
+        setCategories([...categories, data[0] as Category]);
+        setNewCategoryName('');
+        
+        toast({
+          title: 'دسته‌بندی اضافه شد',
+          description: 'دسته‌بندی جدید با موفقیت اضافه شد.',
+        });
+      }
     } catch (error) {
       console.error('Error adding category:', error);
       toast({
@@ -164,13 +170,15 @@ const SettingsPage: React.FC = () => {
         
       if (error) throw error;
       
-      setBanks([...banks, data as Bank]);
-      setNewBankName('');
-      
-      toast({
-        title: 'بانک اضافه شد',
-        description: 'بانک جدید با موفقیت اضافه شد.',
-      });
+      if (data && data[0]) {
+        setBanks([...banks, data[0] as Bank]);
+        setNewBankName('');
+        
+        toast({
+          title: 'بانک اضافه شد',
+          description: 'بانک جدید با موفقیت اضافه شد.',
+        });
+      }
     } catch (error) {
       console.error('Error adding bank:', error);
       toast({

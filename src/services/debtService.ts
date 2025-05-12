@@ -155,7 +155,7 @@ export const fetchCategories = async (): Promise<Category[]> => {
     throw error;
   }
 
-  return (data || []) as Category[];
+  return data || [];
 };
 
 // Function to fetch banks
@@ -170,7 +170,7 @@ export const fetchBanks = async (): Promise<Bank[]> => {
     throw error;
   }
 
-  return (data || []) as Bank[];
+  return data || [];
 };
 
 // Function to add a new category
@@ -183,7 +183,11 @@ export const addCategory = async (name: string, isSystem: boolean = false): Prom
     throw error;
   }
 
-  return data as Category;
+  if (!data || !data[0]) {
+    throw new Error("No data returned when adding category");
+  }
+
+  return data[0] as Category;
 };
 
 // Function to add a new bank
@@ -196,7 +200,11 @@ export const addBank = async (name: string, isSystem: boolean = false): Promise<
     throw error;
   }
 
-  return data as Bank;
+  if (!data || !data[0]) {
+    throw new Error("No data returned when adding bank");
+  }
+
+  return data[0] as Bank;
 };
 
 // Function to fetch day notes for a specific date
@@ -211,7 +219,7 @@ export const fetchDayNote = async (date: string): Promise<DayNote | null> => {
     throw error;
   }
 
-  return (data || null) as DayNote | null;
+  return data ? (data as DayNote) : null;
 };
 
 // Function to save a day note
@@ -227,7 +235,11 @@ export const saveDayNote = async (date: string, note: string, id?: string): Prom
       throw error;
     }
 
-    return data as DayNote;
+    if (!data || !data[0]) {
+      throw new Error("No data returned when updating day note");
+    }
+
+    return data[0] as DayNote;
   } else {
     // Insert new note
     const { data, error } = await queryCustomTable<DayNote>('day_notes')
@@ -238,7 +250,11 @@ export const saveDayNote = async (date: string, note: string, id?: string): Prom
       throw error;
     }
 
-    return data as DayNote;
+    if (!data || !data[0]) {
+      throw new Error("No data returned when adding day note");
+    }
+
+    return data[0] as DayNote;
   }
 };
 

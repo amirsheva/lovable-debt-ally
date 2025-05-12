@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -85,7 +86,9 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
             .get();
             
           if (error) throw error;
-          setCategories(Array.isArray(data) ? data : []);
+          if (data) {
+            setCategories(data);
+          }
         } catch (error) {
           console.error('Error fetching categories:', error);
         }
@@ -100,7 +103,9 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
             .get();
             
           if (error) throw error;
-          setBanks(Array.isArray(data) ? data : []);
+          if (data) {
+            setBanks(data);
+          }
         } catch (error) {
           console.error('Error fetching banks:', error);
         }
