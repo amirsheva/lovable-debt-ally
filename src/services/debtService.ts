@@ -19,7 +19,7 @@ export const fetchDebts = async (): Promise<Debt[]> => {
   // Transform from database format to application format
   return (data || []).map(item => ({
     id: item.id,
-    name: item.name,
+    name: item.name as string | undefined,
     amount: Number(item.amount),
     debtType: item.debt_type as DebtType,
     dueDate: item.due_date,
@@ -29,8 +29,8 @@ export const fetchDebts = async (): Promise<Debt[]> => {
     status: item.status as DebtStatus,
     createdAt: item.created_at,
     user_id: item.user_id,
-    category_id: item.category_id,
-    bank_id: item.bank_id
+    category_id: (item as any).category_id,
+    bank_id: (item as any).bank_id
   }));
 };
 
@@ -86,7 +86,7 @@ export const addDebt = async (debt: Omit<Debt, "id" | "createdAt">): Promise<Deb
   // Transform from database format to application format
   return {
     id: data.id,
-    name: data.name,
+    name: data.name as string | undefined,
     amount: Number(data.amount),
     debtType: data.debt_type as DebtType,
     dueDate: data.due_date,
@@ -96,8 +96,8 @@ export const addDebt = async (debt: Omit<Debt, "id" | "createdAt">): Promise<Deb
     status: data.status as DebtStatus,
     createdAt: data.created_at,
     user_id: data.user_id,
-    category_id: data.category_id,
-    bank_id: data.bank_id
+    category_id: (data as any).category_id,
+    bank_id: (data as any).bank_id
   };
 };
 

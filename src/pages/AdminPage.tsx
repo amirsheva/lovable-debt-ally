@@ -42,7 +42,7 @@ const AdminPage = () => {
         // Combine the data
         const userData = profiles.map((profile: any) => {
           const userEmail = authData ? authData.find((u: any) => u.id === profile.id)?.email : '';
-          const userRole = roles.find((r: any) => r.user_id === profile.id)?.role || 'user';
+          const userRole = roles ? roles.find((r: any) => r.user_id === profile.id)?.role || 'user' : 'user';
           
           return {
             id: profile.id,
