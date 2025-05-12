@@ -5,7 +5,7 @@ import Layout from '../components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { User, UserRole as AppUserRole } from '../types';
+import { User, UserRole } from '../types';
 import { queryCustomTable } from '@/utils/supabaseUtils';
 
 // Define interfaces for our data types
@@ -23,6 +23,9 @@ interface AuthUserData {
   id: string;
   email: string;
 }
+
+// Use a different name for the imported UserRole to avoid naming conflicts
+type AppUserRole = UserRole;
 
 interface AdminUser extends User {
   role: AppUserRole;
@@ -72,7 +75,10 @@ const AdminPage = () => {
           
           // Find role from roles data
           const userRoleObj = rolesArray.find((r) => r.user_id === profile.id);
-          const userRole = userRoleObj ? (userRoleObj.role as AppUserRole) : ('user' as AppUserRole);
+          // Use explicit type casting to AppUserRole
+          const userRole = userRoleObj 
+            ? (userRoleObj.role as unknown as AppUserRole) 
+            : ('user' as AppUserRole);
           
           return {
             id: profile.id,
