@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '../components/Layout';
@@ -53,9 +52,8 @@ const AdminPage = () => {
         if (profilesError) throw profilesError;
         
         // Then get user emails from auth.users (needs admin rights)
-        // Explicitly define both type arguments for the RPC call
         const { data: authData, error: authError } = await supabase
-          .rpc<AuthUserData[], EmptyParams>('get_users_data');
+          .rpc('get_users_data');
           
         if (authError) {
           console.error('Error fetching user emails:', authError);
