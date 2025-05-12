@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { PostgrestResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
 
@@ -27,7 +26,7 @@ export const queryCustomTable = <T extends Record<string, any> = Record<string, 
           },
           get: async () => {
             const result = await selectQuery.eq(column, value);
-            return result as PostgrestResponse<T[]>;
+            return result as PostgrestResponse<T>;
           },
         }),
         order: (column: string, options?: { ascending?: boolean }) => {
@@ -35,13 +34,13 @@ export const queryCustomTable = <T extends Record<string, any> = Record<string, 
           return {
             get: async () => {
               const result = await orderedQuery;
-              return result as PostgrestResponse<T[]>;
+              return result as PostgrestResponse<T>;
             },
           };
         },
         get: async () => {
           const result = await selectQuery;
-          return result as PostgrestResponse<T[]>;
+          return result as PostgrestResponse<T>;
         },
       };
     },

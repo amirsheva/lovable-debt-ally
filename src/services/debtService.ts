@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Debt, DebtType, DebtStatus, Payment, Category, Bank, DayNote } from "../types";
 import { queryCustomTable } from "@/utils/supabaseUtils";
@@ -155,7 +156,7 @@ export const fetchCategories = async (): Promise<Category[]> => {
     throw error;
   }
 
-  return data || [];
+  return data ?? [];
 };
 
 // Function to fetch banks
@@ -170,7 +171,7 @@ export const fetchBanks = async (): Promise<Bank[]> => {
     throw error;
   }
 
-  return data || [];
+  return data ?? [];
 };
 
 // Function to add a new category
