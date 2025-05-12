@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { User, UserRole } from '../types';
 import { queryCustomTable } from '@/utils/supabaseUtils';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 // Define interfaces for our data types
 interface UserProfile {
@@ -75,9 +76,8 @@ const AdminPage = () => {
           
           // Find role from roles data
           const userRoleObj = rolesArray.find((r) => r.user_id === profile.id);
-          // Use explicit type casting to AppUserRole
           const userRole = userRoleObj 
-            ? (userRoleObj.role as unknown as AppUserRole) 
+            ? (userRoleObj.role as unknown as AppUserRole)
             : ('user' as AppUserRole);
           
           return {
@@ -147,22 +147,22 @@ const AdminPage = () => {
               <div className="text-center py-4">در حال بارگذاری...</div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="border p-2 text-right">نام</th>
-                      <th className="border p-2 text-right">ایمیل</th>
-                      <th className="border p-2 text-right">نقش</th>
-                      <th className="border p-2 text-right">عملیات</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-right">نام</TableHead>
+                      <TableHead className="text-right">ایمیل</TableHead>
+                      <TableHead className="text-right">نقش</TableHead>
+                      <TableHead className="text-right">عملیات</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {users.map((user) => (
-                      <tr key={user.id} className="hover:bg-gray-50">
-                        <td className="border p-2">{user.full_name}</td>
-                        <td className="border p-2">{user.email}</td>
-                        <td className="border p-2">{user.role}</td>
-                        <td className="border p-2">
+                      <TableRow key={user.id}>
+                        <TableCell>{user.full_name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{user.role}</TableCell>
+                        <TableCell>
                           <Select 
                             defaultValue={user.role}
                             onValueChange={(value) => handleRoleChange(user.id, value as AppUserRole)}
@@ -176,11 +176,11 @@ const AdminPage = () => {
                               <SelectItem value="god">god</SelectItem>
                             </SelectContent>
                           </Select>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             )}
           </CardContent>
