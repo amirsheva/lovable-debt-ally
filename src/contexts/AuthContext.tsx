@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -46,8 +47,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 .single();
 
               if (data && !error) {
-                // Use a double cast: first to unknown, then to our expected type
-                const roleData = data as unknown as UserRoleData;
+                // Use a simpler type assertion
+                const roleData = data as any as UserRoleData;
                 setUserRole(roleData.role);
                 
                 // If no role found, set default to 'user'
@@ -97,7 +98,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             .single();
 
           if (data && !error) {
-            const roleData = data as unknown as UserRoleData;
+            const roleData = data as any as UserRoleData;
             setUserRole(roleData.role);
           } else {
             // If no role found, set default to 'user'
