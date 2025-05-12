@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,7 +28,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Debt, DebtType, Category, Bank } from '../types';
-import { queryCustomTable } from '@/utils/supabaseUtils';
+import { queryCustomTable, numberToPersianWords } from '@/utils/supabaseUtils';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface AddDebtFormProps {
   onAddDebt: (debt: Omit<Debt, "id" | "createdAt">) => Promise<Debt>;
@@ -67,6 +69,9 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
+  const [amountInWords, setAmountInWords] = useState<string>('');
+  const [formattedAmount, setFormattedAmount] = useState<string>('');
+  const [formErrors, setFormErrors] = useState<string[]>([]);
   const settings = getAppSettings();
   
   // Fetch categories and banks
@@ -98,9 +103,11 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
     fetchCategoriesAndBanks();
   }, [settings.enabledFeatures.categories, settings.enabledFeatures.banks]);
   
-  // Define form schema based on settings
+  // Define form schema based on settings with Persian error messages
   const formSchema = z.object({
-    name: settings.requiredFields.name ? z.string().min(1, { message: "نام بدهی الزامی است" }) : z.string().optional(),
+    name: settings.requiredFields.name ? 
+      z.string().min(1, { message: "نام بدهی الزامی است" }) : 
+      z.string().optional(),
     amount: z.string().min(1, { message: "مبلغ بدهی الزامی است" }).refine(value => !isNaN(Number(value)) && Number(value) > 0, {
       message: "مبلغ بدهی باید عدد مثبت باشد",
     }),
@@ -136,6 +143,25 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
     },
   });
   
+  // Format amount as user types
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Remove non-numeric characters
+    const value = e.target.value.replace(/[^\d]/g, '');
+    
+    // Set raw value to form
+    form.setValue("amount", value);
+    
+    // Format with thousand separators for display
+    if (value) {
+      const numValue = Number(value);
+      setFormattedAmount(numValue.toLocaleString('fa-IR'));
+      setAmountInWords(numberToPersianWords(numValue));
+    } else {
+      setFormattedAmount('');
+      setAmountInWords('');
+    }
+  };
+  
   // Watch debt type to conditionally show bank selection
   const debtType = form.watch("debtType");
   const showBankField = debtType === "bank_loan" && settings.enabledFeatures.banks;
@@ -152,12 +178,14 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
   // Handle form submit
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      setFormErrors([]);
+      
       // Convert amount to number
       const amount = Number(values.amount);
       
       // Calculate installment amount
       const installments = Number(values.installments);
-      const installmentAmount = amount / installments;
+      const installmentAmount = Math.ceil(amount / installments);
       
       // Format due date
       const dueDate = format(values.dueDate, 'yyyy-MM-dd');
@@ -181,14 +209,29 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
       
       // Navigate to debts list
       navigate("/debts");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding debt:", error);
+      setFormErrors([
+        `خطا در ثبت بدهی: ${error.message || 'لطفاً دوباره تلاش کنید'}`
+      ]);
     }
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">افزودن بدهی جدید</h1>
+    <div dir="rtl">
+      <h1 className="text-2xl font-bold mb-6 text-right">افزودن بدهی جدید</h1>
+      
+      {formErrors.length > 0 && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>
+            <ul className="list-disc pl-5 text-right">
+              {formErrors.map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
       
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <Form {...form}>
@@ -201,11 +244,13 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>نام بدهی {settings.requiredFields.name && <span className="text-red-500">*</span>}</FormLabel>
+                      <FormLabel className="text-right block">
+                        نام بدهی {settings.requiredFields.name && <span className="text-red-500">*</span>}
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="مثال: وام مسکن" {...field} />
+                        <Input placeholder="مثال: وام مسکن" {...field} className="text-right" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-right" />
                     </FormItem>
                   )}
                 />
@@ -215,13 +260,25 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
               <FormField
                 control={form.control}
                 name="amount"
-                render={({ field }) => (
+                render={({ field: { onChange, ...restField } }) => (
                   <FormItem>
-                    <FormLabel>مبلغ بدهی (تومان) *</FormLabel>
+                    <FormLabel className="text-right block">مبلغ بدهی (ریال) *</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="مثال: 50000000" {...field} />
+                      <div className="space-y-1">
+                        <Input 
+                          type="text"
+                          placeholder="مثال: 500000000" 
+                          onChange={handleAmountChange}
+                          value={formattedAmount}
+                          className="text-right"
+                          {...restField} 
+                        />
+                        {amountInWords && (
+                          <p className="text-xs text-gray-500 text-right">{amountInWords}</p>
+                        )}
+                      </div>
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-right" />
                   </FormItem>
                 )}
               />
@@ -232,10 +289,10 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
                 name="debtType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>نوع بدهی *</FormLabel>
+                    <FormLabel className="text-right block">نوع بدهی *</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="text-right">
                           <SelectValue placeholder="انتخاب نوع بدهی" />
                         </SelectTrigger>
                       </FormControl>
@@ -246,7 +303,7 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
                         <SelectItem value="other">بدهی دیگر</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="text-right" />
                   </FormItem>
                 )}
               />
@@ -258,13 +315,13 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
                   name="category_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
+                      <FormLabel className="text-right block">
                         دسته‌بندی
                         {settings.requiredFields.category && <span className="text-red-500">*</span>}
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="text-right">
                             <SelectValue placeholder="انتخاب دسته‌بندی" />
                           </SelectTrigger>
                         </FormControl>
@@ -276,7 +333,7 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
+                      <FormMessage className="text-right" />
                     </FormItem>
                   )}
                 />
@@ -289,13 +346,13 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
                   name="bank_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
+                      <FormLabel className="text-right block">
                         نام بانک
                         {settings.requiredFields.bank && <span className="text-red-500">*</span>}
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="text-right">
                             <SelectValue placeholder="انتخاب بانک" />
                           </SelectTrigger>
                         </FormControl>
@@ -307,7 +364,7 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
+                      <FormMessage className="text-right" />
                     </FormItem>
                   )}
                 />
@@ -319,7 +376,7 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
                 name="dueDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>تاریخ سررسید *</FormLabel>
+                    <FormLabel className="text-right block">تاریخ سررسید *</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -350,7 +407,7 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
                         />
                       </PopoverContent>
                     </Popover>
-                    <FormMessage />
+                    <FormMessage className="text-right" />
                   </FormItem>
                 )}
               />
@@ -361,11 +418,11 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
                 name="installments"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>تعداد اقساط *</FormLabel>
+                    <FormLabel className="text-right block">تعداد اقساط *</FormLabel>
                     <FormControl>
-                      <Input type="number" min="1" {...field} />
+                      <Input type="number" min="1" {...field} className="text-right" />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-right" />
                   </FormItem>
                 )}
               />
@@ -378,18 +435,18 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
+                    <FormLabel className="text-right block">
                       توضیحات
                       {settings.requiredFields.description && <span className="text-red-500">*</span>}
                     </FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="توضیحات بیشتر درباره این بدهی..."
-                        className="resize-none"
+                        className="resize-none text-right"
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-right" />
                   </FormItem>
                 )}
               />

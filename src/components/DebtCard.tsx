@@ -2,7 +2,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Debt } from '../types';
-import { formatCurrency, formatDate, getDebtTypeLabel, getDebtTypeColor } from '../utils/debtUtils';
+import { formatDate, getDebtTypeLabel, getDebtTypeColor } from '../utils/debtUtils';
+import { formatPersianCurrency, numberToPersianWords } from '../utils/supabaseUtils';
 
 interface DebtCardProps {
   debt: Debt;
@@ -23,11 +24,11 @@ const DebtCard: React.FC<DebtCardProps> = ({ debt }) => {
 
   return (
     <Link to={`/debt/${debt.id}`}>
-      <div className="debt-card bg-white rounded-lg shadow-sm p-4 border hover:border-primary">
+      <div className="debt-card bg-white rounded-lg shadow-sm p-4 border hover:border-primary h-full">
         <div className="flex justify-between items-start mb-3">
           <div>
-            <h3 className="font-semibold text-lg">{debt.description}</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="font-semibold text-lg text-right">{debt.description}</h3>
+            <p className="text-sm text-gray-600 text-right">
               {formatDate(debt.createdAt)}
             </p>
           </div>
@@ -36,23 +37,26 @@ const DebtCard: React.FC<DebtCardProps> = ({ debt }) => {
           </div>
         </div>
         
-        <div className="mb-4">
+        <div className="mb-4 text-right">
           <p className="text-xl font-bold text-primary">
-            {formatCurrency(debt.amount)}
+            {formatPersianCurrency(debt.amount)}
+          </p>
+          <p className="text-xs text-gray-500">
+            {numberToPersianWords(debt.amount)}
           </p>
         </div>
         
         <div className="flex justify-between items-center">
-          <div>
-            <p className="text-sm text-gray-600">سررسید: {formatDate(debt.dueDate)}</p>
-            {debt.installments > 1 && (
-              <p className="text-sm text-gray-600">
-                {debt.installments} قسط | هر قسط {formatCurrency(debt.installmentAmount)}
-              </p>
-            )}
-          </div>
           <div className={`${statusClasses[debt.status]} rounded-full text-xs py-1 px-3`}>
             {statusLabels[debt.status]}
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-gray-600">سررسید: {formatDate(debt.dueDate)}</p>
+            {debt.installments > 1 && (
+              <p className="text-sm text-gray-600 text-right">
+                {debt.installments} قسط | هر قسط {formatPersianCurrency(debt.installmentAmount, false)}
+              </p>
+            )}
           </div>
         </div>
       </div>

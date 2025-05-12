@@ -1,14 +1,10 @@
-
 import { Debt, DebtType, Payment } from "../types";
 import { format, parseISO, isAfter, isBefore, addMonths } from "date-fns";
+import { formatPersianCurrency } from "./supabaseUtils";
 
 // Function to format currency
 export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('fa-IR', { 
-    style: 'currency', 
-    currency: 'IRR',
-    maximumFractionDigits: 0 
-  }).format(amount);
+  return formatPersianCurrency(amount);
 };
 
 // Function to format date
@@ -19,12 +15,13 @@ export const formatDate = (dateString: string): string => {
 // Function to calculate the remaining balance
 export const calculateRemainingBalance = (debt: Debt, payments: Payment[]): number => {
   const totalPaid = payments.reduce((sum, payment) => sum + payment.paymentAmount, 0);
-  return debt.amount - totalPaid;
+  return Math.ceil(debt.amount - totalPaid); // Round up to the nearest integer
 };
 
 // Function to calculate installment amount
 export const calculateInstallmentAmount = (debt: Debt): number => {
-  return debt.installments > 0 ? debt.amount / debt.installments : debt.amount;
+  const amount = debt.installments > 0 ? debt.amount / debt.installments : debt.amount;
+  return Math.ceil(amount); // Round up to the nearest integer
 };
 
 // Function to calculate next payment due date
