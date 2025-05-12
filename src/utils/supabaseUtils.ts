@@ -6,8 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
  * @param tableName The name of the table to query
  */
 export const queryCustomTable = (tableName: string) => {
-  // We need to cast to any because the Supabase types don't include all possible tables
-  // This is a more explicit type assertion to avoid TypeScript errors
+  // Use a stronger type assertion to tell TypeScript that we know what we're doing
+  // when accessing tables that aren't in the generated types
   return supabase.from(tableName as any) as unknown as ReturnType<typeof supabase.from>;
 };
 
