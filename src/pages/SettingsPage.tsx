@@ -142,8 +142,8 @@ const SettingsPage: React.FC = () => {
         
       if (error) throw error;
       
-      if (data && data[0]) {
-        setCategories([...categories, data[0] as Category]);
+      if (data) {
+        setCategories([...categories, data[0]]);
         setNewCategoryName('');
         
         toast({
@@ -170,8 +170,8 @@ const SettingsPage: React.FC = () => {
         
       if (error) throw error;
       
-      if (data && data[0]) {
-        setBanks([...banks, data[0] as Bank]);
+      if (data) {
+        setBanks([...banks, data[0]]);
         setNewBankName('');
         
         toast({
