@@ -5,15 +5,16 @@ import Layout from '../components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { User, UserRole } from '../types';
+import { User, UserRole as AppUserRole } from '../types';
 import { queryCustomTable } from '@/utils/supabaseUtils';
 
+// Define interfaces for our data types
 interface UserProfile {
   id: string;
   full_name?: string;
 }
 
-interface UserRole {
+interface UserRoleData {
   user_id: string;
   role: string;
 }
@@ -24,7 +25,7 @@ interface AuthUserData {
 }
 
 const AdminPage = () => {
-  const [users, setUsers] = useState<(User & { role: UserRole })[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   
@@ -57,7 +58,7 @@ const AdminPage = () => {
         // Ensure we have arrays to work with, even if empty
         const profilesArray = profiles as UserProfile[] || [];
         const authDataArray = authData as AuthUserData[] || [];
-        const rolesArray = roles as UserRole[] || [];
+        const rolesArray = roles as UserRoleData[] || [];
         
         // Combine the data with proper type safety
         const userData = profilesArray.map((profile) => {
@@ -73,7 +74,7 @@ const AdminPage = () => {
             id: profile.id,
             email: userEmail || 'Email hidden',
             full_name: profile.full_name || 'Unknown',
-            role: userRole as UserRole
+            role: userRole as AppUserRole
           };
         });
         
@@ -93,7 +94,7 @@ const AdminPage = () => {
     fetchUsers();
   }, [toast]);
   
-  const handleRoleChange = async (userId: string, newRole: UserRole) => {
+  const handleRoleChange = async (userId: string, newRole: AppUserRole) => {
     try {
       // Update role in the database
       const { error } = await queryCustomTable('user_roles')
@@ -154,7 +155,7 @@ const AdminPage = () => {
                         <td className="border p-2">
                           <Select 
                             defaultValue={user.role}
-                            onValueChange={(value) => handleRoleChange(user.id, value as UserRole)}
+                            onValueChange={(value) => handleRoleChange(user.id, value as AppUserRole)}
                           >
                             <SelectTrigger className="w-32">
                               <SelectValue placeholder="انتخاب نقش" />
