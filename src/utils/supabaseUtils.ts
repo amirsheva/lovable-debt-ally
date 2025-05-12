@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { PostgrestResponse, PostgrestSingleResponse } from "@supabase/supabase-js";
 
 /**
  * Utility function for making queries to tables not defined in the Supabase types
@@ -16,27 +17,48 @@ export const queryCustomTable = <T extends Record<string, any> = Record<string, 
       
       return {
         eq: (column: string, value: any) => ({
-          single: async () => await selectQuery.eq(column, value).single() as Promise<{ data: T | null; error: any }>,
-          maybeSingle: async () => await selectQuery.eq(column, value).maybeSingle() as Promise<{ data: T | null; error: any }>,
-          get: async () => await selectQuery.eq(column, value).then(res => res as { data: T[] | null; error: any }),
+          single: async () => {
+            const result = await selectQuery.eq(column, value).single();
+            return result as PostgrestSingleResponse<T>;
+          },
+          maybeSingle: async () => {
+            const result = await selectQuery.eq(column, value).maybeSingle();
+            return result as PostgrestSingleResponse<T>;
+          },
+          get: async () => {
+            const result = await selectQuery.eq(column, value);
+            return result as PostgrestResponse<T[]>;
+          },
         }),
-        order: (column: string, options?: { ascending?: boolean }) => ({
-          get: async () => await selectQuery.order(column, options).then(res => res as { data: T[] | null; error: any }),
-        }),
-        get: async () => await selectQuery.then(res => res as { data: T[] | null; error: any }),
+        order: (column: string, options?: { ascending?: boolean }) => {
+          const orderedQuery = selectQuery.order(column, options);
+          return {
+            get: async () => {
+              const result = await orderedQuery;
+              return result as PostgrestResponse<T[]>;
+            },
+          };
+        },
+        get: async () => {
+          const result = await selectQuery;
+          return result as PostgrestResponse<T[]>;
+        },
       };
     },
     insert: async (values: Partial<T> | Partial<T>[]) => {
-      return await query.insert(values).then(res => res as { data: T | null; error: any });
+      const result = await query.insert(values);
+      return result as PostgrestResponse<T>;
     },
     update: (values: Partial<T>) => ({
       eq: async (column: string, value: any) => {
-        return await query.update(values).eq(column, value).then(res => res as { data: T | null; error: any });
+        const result = await query.update(values).eq(column, value);
+        return result as PostgrestResponse<T>;
       },
     }),
     delete: () => ({
       eq: async (column: string, value: any) => {
-        return await query.delete().eq(column, value).then(res => res as { data: T | null; error: any });
+        const result = await query.delete().eq(column, value);
+        return result as PostgrestResponse<null>;
       },
     }),
   };

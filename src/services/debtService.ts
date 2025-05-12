@@ -147,7 +147,7 @@ export const updateDebtStatus = async (id: string, status: DebtStatus): Promise<
 export const fetchCategories = async (): Promise<Category[]> => {
   const { data, error } = await queryCustomTable<Category>('debt_categories')
     .select('*')
-    .order('name')
+    .order('name', { ascending: true })
     .get();
 
   if (error) {
@@ -162,7 +162,7 @@ export const fetchCategories = async (): Promise<Category[]> => {
 export const fetchBanks = async (): Promise<Bank[]> => {
   const { data, error } = await queryCustomTable<Bank>('banks')
     .select('*')
-    .order('name')
+    .order('name', { ascending: true })
     .get();
 
   if (error) {
@@ -244,10 +244,9 @@ export const saveDayNote = async (date: string, note: string, id?: string): Prom
 
 // Function to delete a day note
 export const deleteDayNote = async (id: string): Promise<void> => {
-  const { error } = await supabase
-    .from("day_notes")
+  const { error } = await queryCustomTable<DayNote>('day_notes')
     .delete()
-    .eq("id", id);
+    .eq('id', id);
 
   if (error) {
     console.error("Error deleting day note:", error);

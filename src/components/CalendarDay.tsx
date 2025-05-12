@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -62,8 +63,8 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
           if (error) throw error;
           
           if (data) {
-            setNote((data as DayNoteData).note || '');
-            setNoteId((data as DayNoteData).id);
+            setNote(data.note || '');
+            setNoteId(data.id);
           } else {
             setNote('');
             setNoteId(null);

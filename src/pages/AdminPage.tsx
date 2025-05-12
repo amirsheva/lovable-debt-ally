@@ -109,11 +109,11 @@ const AdminPage = () => {
   const handleRoleChange = async (userId: string, newRole: AppUserRole) => {
     try {
       // Update role in the database
-      const updateResult = await queryCustomTable<UserRoleData>('user_roles')
+      const { error } = await queryCustomTable<UserRoleData>('user_roles')
         .update({ role: newRole })
         .eq('user_id', userId);
         
-      if (updateResult.error) throw updateResult.error;
+      if (error) throw error;
       
       // Update local state
       setUsers(users.map(user => 
