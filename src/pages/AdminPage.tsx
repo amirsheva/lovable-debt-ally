@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '../components/Layout';
@@ -52,6 +53,7 @@ const AdminPage = () => {
         if (profilesError) throw profilesError;
         
         // Then get user emails from auth.users (needs admin rights)
+        // Fix: Remove explicit generic type parameters and use type assertion
         const { data: authData, error: authError } = await supabase
           .rpc('get_users_data');
           
