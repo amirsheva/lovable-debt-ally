@@ -1,11 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { PostgrestQueryBuilder } from "@supabase/supabase-js";
 
 /**
  * Utility function for making queries to tables not defined in the Supabase types
  * @param tableName The name of the table to query
  */
-export const queryCustomTable = (tableName: string) => {
+export const queryCustomTable = (tableName: string): PostgrestQueryBuilder<any, any> => {
   // We need to cast to any because the Supabase types don't include all possible tables
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return supabase.from(tableName) as any;
@@ -109,4 +110,3 @@ export const numberToPersianWords = (num: number): string => {
   
   return words.trim() + ' تومان';
 };
-

@@ -5,10 +5,9 @@ import {
   PlusCircle, 
   ArrowUpCircle, 
   Calendar, 
-  ChartBarIcon, 
+  BarChart3, 
   ClipboardCheck 
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 const QuickActions: React.FC = () => {
@@ -36,7 +35,7 @@ const QuickActions: React.FC = () => {
     },
     {
       title: 'گزارشات',
-      icon: <ChartBarIcon className="h-6 w-6" />,
+      icon: <BarChart3 className="h-6 w-6" />,
       description: 'مشاهده گزارش‌های آماری',
       link: '/reports',
       color: 'bg-amber-100 text-amber-600'
@@ -44,12 +43,12 @@ const QuickActions: React.FC = () => {
   ];
 
   return (
-    <Card className="p-4 mb-8">
+    <Card className="p-4 mb-8 shadow-md border border-gray-100">
       <h2 className="text-xl font-bold mb-4 text-right">عملیات سریع</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {actions.map((action, index) => (
           <Link to={action.link} key={index} className="block">
-            <div className="border rounded-lg p-4 hover:border-primary transition-all hover:shadow-md">
+            <div className="border rounded-lg p-4 hover:border-primary transition-all hover:shadow-md h-full">
               <div className={`${action.color} p-3 rounded-full w-12 h-12 flex items-center justify-center mb-3 mx-auto`}>
                 {action.icon}
               </div>
