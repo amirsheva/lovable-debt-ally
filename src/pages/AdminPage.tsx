@@ -19,8 +19,7 @@ const AdminPage = () => {
         setLoading(true);
         
         // First get all users from profiles
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
+        const { data: profiles, error: profilesError } = await queryCustomTable('profiles')
           .select('id, full_name');
           
         if (profilesError) throw profilesError;

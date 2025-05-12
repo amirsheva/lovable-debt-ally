@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +12,7 @@ import { useToast } from '../hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Category, Bank, AppSettings, UserRole } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { queryCustomTable } from '@/utils/supabaseUtils';
 
 const SettingsPage: React.FC = () => {
   const { toast } = useToast();
@@ -52,14 +52,13 @@ const SettingsPage: React.FC = () => {
     
     const loadCategories = async () => {
       try {
-        const { data, error } = await supabase
-          .from('debt_categories')
+        const { data, error } = await queryCustomTable('debt_categories')
           .select('*')
           .order('is_system', { ascending: false })
           .order('name');
         
         if (error) throw error;
-        setCategories(data);
+        setCategories(data as Category[]);
       } catch (error) {
         console.error('Error loading categories:', error);
         toast({
@@ -72,14 +71,13 @@ const SettingsPage: React.FC = () => {
     
     const loadBanks = async () => {
       try {
-        const { data, error } = await supabase
-          .from('banks')
+        const { data, error } = await queryCustomTable('banks')
           .select('*')
           .order('is_system', { ascending: false })
           .order('name');
         
         if (error) throw error;
-        setBanks(data);
+        setBanks(data as Bank[]);
       } catch (error) {
         console.error('Error loading banks:', error);
         toast({
@@ -135,15 +133,14 @@ const SettingsPage: React.FC = () => {
     if (!newCategoryName.trim()) return;
     
     try {
-      const { data, error } = await supabase
-        .from('debt_categories')
+      const { data, error } = await queryCustomTable('debt_categories')
         .insert({ name: newCategoryName, is_system: isAdmin ? true : false })
         .select()
         .single();
         
       if (error) throw error;
       
-      setCategories([...categories, data]);
+      setCategories([...categories, data as Category]);
       setNewCategoryName('');
       
       toast({
@@ -164,15 +161,14 @@ const SettingsPage: React.FC = () => {
     if (!newBankName.trim()) return;
     
     try {
-      const { data, error } = await supabase
-        .from('banks')
+      const { data, error } = await queryCustomTable('banks')
         .insert({ name: newBankName, is_system: isAdmin ? true : false })
         .select()
         .single();
         
       if (error) throw error;
       
-      setBanks([...banks, data]);
+      setBanks([...banks, data as Bank]);
       setNewBankName('');
       
       toast({
@@ -193,8 +189,7 @@ const SettingsPage: React.FC = () => {
     if (!editCategoryId || !editCategoryName.trim()) return;
     
     try {
-      const { error } = await supabase
-        .from('debt_categories')
+      const { error } = await queryCustomTable('debt_categories')
         .update({ name: editCategoryName })
         .eq('id', editCategoryId);
         
@@ -225,8 +220,7 @@ const SettingsPage: React.FC = () => {
     if (!editBankId || !editBankName.trim()) return;
     
     try {
-      const { error } = await supabase
-        .from('banks')
+      const { error } = await queryCustomTable('banks')
         .update({ name: editBankName })
         .eq('id', editBankId);
         
@@ -255,8 +249,7 @@ const SettingsPage: React.FC = () => {
   
   const handleDeleteCategory = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('debt_categories')
+      const { error } = await queryCustomTable('debt_categories')
         .delete()
         .eq('id', id);
         
@@ -280,8 +273,7 @@ const SettingsPage: React.FC = () => {
   
   const handleDeleteBank = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('banks')
+      const { error } = await queryCustomTable('banks')
         .delete()
         .eq('id', id);
         
