@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -47,12 +46,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 .single();
 
               if (data && !error) {
-                // Use a simpler type assertion
-                const roleData = data as any as UserRoleData;
-                setUserRole(roleData.role);
+                // Safely handle the data with proper type casting
+                setUserRole(data.role as UserRole);
                 
                 // If no role found, set default to 'user'
-                if (!roleData.role) {
+                if (!data.role) {
                   // Insert default role
                   await queryCustomTable<UserRoleData>('user_roles')
                     .insert({ user_id: userData.id, role: 'user' as UserRole });
@@ -98,8 +96,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             .single();
 
           if (data && !error) {
-            const roleData = data as any as UserRoleData;
-            setUserRole(roleData.role);
+            setUserRole(data.role as UserRole);
           } else {
             // If no role found, set default to 'user'
             await queryCustomTable<UserRoleData>('user_roles')
