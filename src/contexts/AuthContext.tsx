@@ -47,10 +47,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 .single();
 
               if (data && !error) {
-                setUserRole((data as UserRoleData).role as UserRole);
+                const roleData = data as unknown as UserRoleData;
+                setUserRole(roleData.role);
                 
                 // If no role found, set default to 'user'
-                if (!(data as UserRoleData).role) {
+                if (!roleData.role) {
                   // Insert default role
                   await queryCustomTable<UserRoleData>('user_roles')
                     .insert({ user_id: userData.id, role: 'user' });
@@ -96,7 +97,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             .single();
 
           if (data && !error) {
-            setUserRole((data as UserRoleData).role as UserRole);
+            const roleData = data as unknown as UserRoleData;
+            setUserRole(roleData.role);
           } else {
             // If no role found, set default to 'user'
             await queryCustomTable<UserRoleData>('user_roles')

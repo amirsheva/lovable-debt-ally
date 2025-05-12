@@ -64,9 +64,9 @@ const AdminPage = () => {
         if (rolesError) throw rolesError;
         
         // Ensure we have arrays to work with, even if empty
-        const profilesArray = (profiles || []) as UserProfile[];
-        const authDataArray = (authData || []) as AuthUserData[];
-        const rolesArray = (roles || []) as UserRoleData[];
+        const profilesArray = (profiles || []) as unknown as UserProfile[];
+        const authDataArray = (authData || []) as unknown as AuthUserData[];
+        const rolesArray = (roles || []) as unknown as UserRoleData[];
         
         // Combine the data with proper type safety
         const userData: AdminUser[] = profilesArray.map((profile) => {
