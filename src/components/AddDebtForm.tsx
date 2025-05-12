@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { format } from 'date-fns';
+import { format } from 'date-fns-jalali';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,7 +27,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Debt, DebtType, Category, Bank } from '../types';
-import { supabase } from '@/integrations/supabase/client';
+import { queryCustomTable } from '@/utils/supabaseUtils';
 
 interface AddDebtFormProps {
   onAddDebt: (debt: Omit<Debt, "id" | "createdAt">) => Promise<Debt>;
@@ -74,30 +73,24 @@ const AddDebtForm: React.FC<AddDebtFormProps> = ({ onAddDebt }) => {
   useEffect(() => {
     const fetchCategoriesAndBanks = async () => {
       if (settings.enabledFeatures.categories) {
-        // Use raw query for debt_categories since it's not in the types
-        const { data: categoriesData } = await supabase
-          .from('debt_categories')
+        // Use our custom query utility for debt_categories
+        const { data: categoriesData } = await queryCustomTable('debt_categories')
           .select('*')
           .order('name');
           
         if (categoriesData) {
-          // Type cast the response to Category[]
-          const typedCategories = categoriesData as unknown as Category[];
-          setCategories(typedCategories);
+          setCategories(categoriesData as Category[]);
         }
       }
       
       if (settings.enabledFeatures.banks) {
-        // Use raw query for banks since it's not in the types
-        const { data: banksData } = await supabase
-          .from('banks')
+        // Use our custom query utility for banks
+        const { data: banksData } = await queryCustomTable('banks')
           .select('*')
           .order('name');
           
         if (banksData) {
-          // Type cast the response to Bank[]
-          const typedBanks = banksData as unknown as Bank[];
-          setBanks(typedBanks);
+          setBanks(banksData as Bank[]);
         }
       }
     };

@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import CalendarDay from '../components/CalendarDay';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, parse, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, addDays, isSameMonth, isSameDay } from 'date-fns';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, addDays, isSameMonth, isSameDay } from 'date-fns-jalali';
 import { Debt, Payment } from '../types';
 
 interface CalendarPageProps {

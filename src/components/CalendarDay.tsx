@@ -11,9 +11,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import { format } from 'date-fns-jalali';
 import { DayNote } from '@/types';
+import { queryCustomTable } from '@/utils/supabaseUtils';
 
 interface CalendarDayProps {
   date: Date;
@@ -46,9 +46,8 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
       const fetchNote = async () => {
         setIsLoading(true);
         try {
-          // Use raw query for day_notes since it's not in the types
-          const { data, error } = await supabase
-            .from('day_notes')
+          // Use our custom query utility for the day_notes table
+          const { data, error } = await queryCustomTable('day_notes')
             .select('*')
             .eq('date', formattedDate)
             .maybeSingle();
@@ -56,7 +55,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
           if (error) throw error;
           
           if (data) {
-            setNote(data.note);
+            setNote(data.note || '');
             setNoteId(data.id);
           } else {
             setNote('');
@@ -78,16 +77,14 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
     try {
       if (noteId) {
         // Update existing note
-        const { error } = await supabase
-          .from('day_notes')
+        const { error } = await queryCustomTable('day_notes')
           .update({ note })
           .eq('id', noteId);
           
         if (error) throw error;
       } else {
         // Insert new note
-        const { error } = await supabase
-          .from('day_notes')
+        const { error } = await queryCustomTable('day_notes')
           .insert({ date: formattedDate, note });
           
         if (error) throw error;
@@ -114,8 +111,7 @@ const CalendarDay: React.FC<CalendarDayProps> = ({
     if (!noteId) return;
     
     try {
-      const { error } = await supabase
-        .from('day_notes')
+      const { error } = await queryCustomTable('day_notes')
         .delete()
         .eq('id', noteId);
         

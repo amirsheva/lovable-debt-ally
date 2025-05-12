@@ -1,6 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Debt, DebtType, DebtStatus, Payment, Category, Bank, DayNote } from "../types";
+import { queryCustomTable } from "@/utils/supabaseUtils";
 
 // Function to fetch all debts from Supabase for the current user
 export const fetchDebts = async (): Promise<Debt[]> => {
@@ -145,8 +145,7 @@ export const updateDebtStatus = async (id: string, status: DebtStatus): Promise<
 
 // Function to fetch categories
 export const fetchCategories = async (): Promise<Category[]> => {
-  const { data, error } = await supabase
-    .from("debt_categories")
+  const { data, error } = await queryCustomTable("debt_categories")
     .select("*")
     .order('name');
 
@@ -160,8 +159,7 @@ export const fetchCategories = async (): Promise<Category[]> => {
 
 // Function to fetch banks
 export const fetchBanks = async (): Promise<Bank[]> => {
-  const { data, error } = await supabase
-    .from("banks")
+  const { data, error } = await queryCustomTable("banks")
     .select("*")
     .order('name');
 
@@ -175,8 +173,7 @@ export const fetchBanks = async (): Promise<Bank[]> => {
 
 // Function to add a new category
 export const addCategory = async (name: string, isSystem: boolean = false): Promise<Category> => {
-  const { data, error } = await supabase
-    .from("debt_categories")
+  const { data, error } = await queryCustomTable("debt_categories")
     .insert({ name, is_system: isSystem })
     .select()
     .single();
@@ -191,8 +188,7 @@ export const addCategory = async (name: string, isSystem: boolean = false): Prom
 
 // Function to add a new bank
 export const addBank = async (name: string, isSystem: boolean = false): Promise<Bank> => {
-  const { data, error } = await supabase
-    .from("banks")
+  const { data, error } = await queryCustomTable("banks")
     .insert({ name, is_system: isSystem })
     .select()
     .single();
@@ -207,8 +203,7 @@ export const addBank = async (name: string, isSystem: boolean = false): Promise<
 
 // Function to fetch day notes for a specific date
 export const fetchDayNote = async (date: string): Promise<DayNote | null> => {
-  const { data, error } = await supabase
-    .from("day_notes")
+  const { data, error } = await queryCustomTable("day_notes")
     .select("*")
     .eq("date", date)
     .maybeSingle();
@@ -225,8 +220,7 @@ export const fetchDayNote = async (date: string): Promise<DayNote | null> => {
 export const saveDayNote = async (date: string, note: string, id?: string): Promise<DayNote> => {
   if (id) {
     // Update existing note
-    const { data, error } = await supabase
-      .from("day_notes")
+    const { data, error } = await queryCustomTable("day_notes")
       .update({ note })
       .eq("id", id)
       .select()
@@ -240,8 +234,7 @@ export const saveDayNote = async (date: string, note: string, id?: string): Prom
     return data;
   } else {
     // Insert new note
-    const { data, error } = await supabase
-      .from("day_notes")
+    const { data, error } = await queryCustomTable("day_notes")
       .insert({ date, note })
       .select()
       .single();
@@ -257,8 +250,7 @@ export const saveDayNote = async (date: string, note: string, id?: string): Prom
 
 // Function to delete a day note
 export const deleteDayNote = async (id: string): Promise<void> => {
-  const { error } = await supabase
-    .from("day_notes")
+  const { error } = await queryCustomTable("day_notes")
     .delete()
     .eq("id", id);
 
