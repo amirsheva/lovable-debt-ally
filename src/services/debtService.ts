@@ -183,11 +183,11 @@ export const addCategory = async (name: string, isSystem: boolean = false): Prom
     throw error;
   }
 
-  if (!data || !data[0]) {
+  if (!data || data.length === 0) {
     throw new Error("No data returned when adding category");
   }
 
-  return data[0] as Category;
+  return data[0];
 };
 
 // Function to add a new bank
@@ -200,14 +200,14 @@ export const addBank = async (name: string, isSystem: boolean = false): Promise<
     throw error;
   }
 
-  if (!data || !data[0]) {
+  if (!data || data.length === 0) {
     throw new Error("No data returned when adding bank");
   }
 
-  return data[0] as Bank;
+  return data[0];
 };
 
-// Function to fetch day notes for a specific date
+// Function to fetch day note for a specific date
 export const fetchDayNote = async (date: string): Promise<DayNote | null> => {
   const { data, error } = await queryCustomTable<DayNote>('day_notes')
     .select('*')
@@ -219,7 +219,7 @@ export const fetchDayNote = async (date: string): Promise<DayNote | null> => {
     throw error;
   }
 
-  return data ? (data as DayNote) : null;
+  return data || null;
 };
 
 // Function to save a day note
