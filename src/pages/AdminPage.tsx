@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '../components/Layout';
@@ -25,9 +24,6 @@ interface AuthUserData {
   email: string;
 }
 
-// Define empty parameters interface for the RPC call
-interface EmptyParams {}
-
 // Use a different name for the imported UserRole to avoid naming conflicts
 type AppUserRole = UserRole;
 
@@ -53,9 +49,9 @@ const AdminPage = () => {
         if (profilesError) throw profilesError;
         
         // Then get user emails from auth.users (needs admin rights)
-        // Fix: Remove explicit generic type parameters and use type assertion
+        // We need to properly type the RPC call to avoid type errors
         const { data: authData, error: authError } = await supabase
-          .rpc('get_users_data');
+          .rpc('get_users_data') as { data: AuthUserData[] | null, error: any };
           
         if (authError) {
           console.error('Error fetching user emails:', authError);
