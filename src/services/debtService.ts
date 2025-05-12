@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Debt, DebtType, DebtStatus, Payment, Category, Bank, DayNote } from "../types";
 import { queryCustomTable } from "@/utils/supabaseUtils";
@@ -146,118 +145,112 @@ export const updateDebtStatus = async (id: string, status: DebtStatus): Promise<
 
 // Function to fetch categories
 export const fetchCategories = async (): Promise<Category[]> => {
-  const { data, error } = await queryCustomTable<Category>('debt_categories')
+  const result = await queryCustomTable<Category>('debt_categories')
     .select('*')
-    .order('name');
+    .order('name')
+    .get();
 
-  if (error) {
-    console.error("Error fetching categories:", error);
-    throw error;
+  if (result.error) {
+    console.error("Error fetching categories:", result.error);
+    throw result.error;
   }
 
-  return (data || []) as Category[];
+  return (result.data || []) as Category[];
 };
 
 // Function to fetch banks
 export const fetchBanks = async (): Promise<Bank[]> => {
-  const { data, error } = await queryCustomTable<Bank>('banks')
+  const result = await queryCustomTable<Bank>('banks')
     .select('*')
-    .order('name');
+    .order('name')
+    .get();
 
-  if (error) {
-    console.error("Error fetching banks:", error);
-    throw error;
+  if (result.error) {
+    console.error("Error fetching banks:", result.error);
+    throw result.error;
   }
 
-  return (data || []) as Bank[];
+  return (result.data || []) as Bank[];
 };
 
 // Function to add a new category
 export const addCategory = async (name: string, isSystem: boolean = false): Promise<Category> => {
-  const { data, error } = await queryCustomTable<Category>('debt_categories')
-    .insert({ name, is_system: isSystem })
-    .select()
-    .single();
+  const result = await queryCustomTable<Category>('debt_categories')
+    .insert({ name, is_system: isSystem });
 
-  if (error) {
-    console.error("Error adding category:", error);
-    throw error;
+  if (result.error) {
+    console.error("Error adding category:", result.error);
+    throw result.error;
   }
 
-  return data as Category;
+  return result.data as Category;
 };
 
 // Function to add a new bank
 export const addBank = async (name: string, isSystem: boolean = false): Promise<Bank> => {
-  const { data, error } = await queryCustomTable<Bank>('banks')
-    .insert({ name, is_system: isSystem })
-    .select()
-    .single();
+  const result = await queryCustomTable<Bank>('banks')
+    .insert({ name, is_system: isSystem });
 
-  if (error) {
-    console.error("Error adding bank:", error);
-    throw error;
+  if (result.error) {
+    console.error("Error adding bank:", result.error);
+    throw result.error;
   }
 
-  return data as Bank;
+  return result.data as Bank;
 };
 
 // Function to fetch day notes for a specific date
 export const fetchDayNote = async (date: string): Promise<DayNote | null> => {
-  const { data, error } = await queryCustomTable<DayNote>('day_notes')
+  const result = await queryCustomTable<DayNote>('day_notes')
     .select('*')
     .eq('date', date)
     .maybeSingle();
 
-  if (error) {
-    console.error("Error fetching day note:", error);
-    throw error;
+  if (result.error) {
+    console.error("Error fetching day note:", result.error);
+    throw result.error;
   }
 
-  return (data || null) as DayNote | null;
+  return (result.data || null) as DayNote | null;
 };
 
 // Function to save a day note
 export const saveDayNote = async (date: string, note: string, id?: string): Promise<DayNote> => {
   if (id) {
     // Update existing note
-    const { data, error } = await queryCustomTable<DayNote>('day_notes')
+    const result = await queryCustomTable<DayNote>('day_notes')
       .update({ note })
-      .eq('id', id)
-      .select()
-      .single();
+      .eq('id', id);
 
-    if (error) {
-      console.error("Error updating day note:", error);
-      throw error;
+    if (result.error) {
+      console.error("Error updating day note:", result.error);
+      throw result.error;
     }
 
-    return data as DayNote;
+    return result.data as DayNote;
   } else {
     // Insert new note
-    const { data, error } = await queryCustomTable<DayNote>('day_notes')
-      .insert({ date, note })
-      .select()
-      .single();
+    const result = await queryCustomTable<DayNote>('day_notes')
+      .insert({ date, note });
 
-    if (error) {
-      console.error("Error adding day note:", error);
-      throw error;
+    if (result.error) {
+      console.error("Error adding day note:", result.error);
+      throw result.error;
     }
 
-    return data as DayNote;
+    return result.data as DayNote;
   }
 };
 
 // Function to delete a day note
 export const deleteDayNote = async (id: string): Promise<void> => {
-  const { error } = await queryCustomTable("day_notes")
+  const result = await queryCustomTable("day_notes")
     .delete()
     .eq("id", id);
 
-  if (error) {
-    console.error("Error deleting day note:", error);
-    throw error;
+  if (result.error) {
+    console.error("Error deleting day note:", result.error);
+    throw result.error;
   }
 };
 

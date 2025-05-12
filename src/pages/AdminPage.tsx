@@ -43,11 +43,11 @@ const AdminPage = () => {
         setIsLoading(true);
         
         // First get all users from profiles
-        const { data: profiles, error: profilesError } = await queryCustomTable<UserProfile>('profiles')
+        const profilesResult = await queryCustomTable<UserProfile>('profiles')
           .select('id, full_name')
           .get();
           
-        if (profilesError) throw profilesError;
+        if (!profilesResult || profilesResult.error) throw profilesResult?.error;
         
         // Then get user emails from auth.users (needs admin rights)
         const { data: authData, error: authError } = await supabase
@@ -59,16 +59,16 @@ const AdminPage = () => {
         }
         
         // Then get all user roles
-        const { data: roles, error: rolesError } = await queryCustomTable<UserRoleData>('user_roles')
+        const rolesResult = await queryCustomTable<UserRoleData>('user_roles')
           .select('user_id, role')
           .get();
           
-        if (rolesError) throw rolesError;
+        if (!rolesResult || rolesResult.error) throw rolesResult?.error;
         
         // Ensure we have arrays to work with, even if empty
-        const profilesArray = Array.isArray(profiles) ? profiles : [];
+        const profilesArray = Array.isArray(profilesResult.data) ? profilesResult.data : [];
         const authDataArray = Array.isArray(authData) ? authData : [];
-        const rolesArray = Array.isArray(roles) ? roles : [];
+        const rolesArray = Array.isArray(rolesResult.data) ? rolesResult.data : [];
         
         // Combine the data with proper type safety
         const userData: AdminUser[] = profilesArray.map((profile) => {
@@ -109,11 +109,11 @@ const AdminPage = () => {
   const handleRoleChange = async (userId: string, newRole: AppUserRole) => {
     try {
       // Update role in the database
-      const { error } = await queryCustomTable<UserRoleData>('user_roles')
+      const updateResult = await queryCustomTable<UserRoleData>('user_roles')
         .update({ role: newRole })
         .eq('user_id', userId);
         
-      if (error) throw error;
+      if (updateResult.error) throw updateResult.error;
       
       // Update local state
       setUsers(users.map(user => 

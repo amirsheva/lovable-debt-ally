@@ -7,33 +7,38 @@ import { supabase } from "@/integrations/supabase/client";
  * @returns A query builder for the specified table with proper type casting
  */
 export const queryCustomTable = <T extends Record<string, any> = Record<string, any>>(tableName: string) => {
-  // Cast both the table name and return type for better TypeScript compatibility
-  return supabase.from(tableName) as unknown as {
+  // Cast the table name to fix the type error
+  const query = supabase.from(tableName as any);
+  
+  return {
     select: (columns?: string) => {
-      eq: (column: string, value: any) => {
-        single: () => Promise<{ data: T | null; error: any }>;
-        maybeSingle: () => Promise<{ data: T | null; error: any }>;
-        get: () => Promise<{ data: T[] | null; error: any }>;
+      const selectQuery = query.select(columns);
+      
+      return {
+        eq: (column: string, value: any) => ({
+          single: async () => await selectQuery.eq(column, value).single() as Promise<{ data: T | null; error: any }>,
+          maybeSingle: async () => await selectQuery.eq(column, value).maybeSingle() as Promise<{ data: T | null; error: any }>,
+          get: async () => await selectQuery.eq(column, value).then(res => res as { data: T[] | null; error: any }),
+        }),
+        order: (column: string, options?: { ascending?: boolean }) => ({
+          get: async () => await selectQuery.order(column, options).then(res => res as { data: T[] | null; error: any }),
+        }),
+        get: async () => await selectQuery.then(res => res as { data: T[] | null; error: any }),
       };
-      order: (column: string, options?: { ascending?: boolean }) => {
-        get: () => Promise<{ data: T[] | null; error: any }>;
-      };
-      get: () => Promise<{ data: T[] | null; error: any }>;
-      insert: (values: Partial<T> | Partial<T>[]) => Promise<{ data: T | null; error: any }>;
-      update: (values: Partial<T>) => {
-        eq: (column: string, value: any) => Promise<{ data: T | null; error: any }>;
-      };
-      delete: () => {
-        eq: (column: string, value: any) => Promise<{ data: T | null; error: any }>;
-      };
-    };
-    insert: (values: Partial<T> | Partial<T>[]) => Promise<{ data: T | null; error: any }>;
-    update: (values: Partial<T>) => {
-      eq: (column: string, value: any) => Promise<{ data: T | null; error: any }>;
-    };
-    delete: () => {
-      eq: (column: string, value: any) => Promise<{ data: T | null; error: any }>;
-    };
+    },
+    insert: async (values: Partial<T> | Partial<T>[]) => {
+      return await query.insert(values).then(res => res as { data: T | null; error: any });
+    },
+    update: (values: Partial<T>) => ({
+      eq: async (column: string, value: any) => {
+        return await query.update(values).eq(column, value).then(res => res as { data: T | null; error: any });
+      },
+    }),
+    delete: () => ({
+      eq: async (column: string, value: any) => {
+        return await query.delete().eq(column, value).then(res => res as { data: T | null; error: any });
+      },
+    }),
   };
 };
 
