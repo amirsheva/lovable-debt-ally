@@ -25,6 +25,9 @@ interface AuthUserData {
   email: string;
 }
 
+// Define empty parameters interface for the RPC call
+interface EmptyParams {}
+
 // Use a different name for the imported UserRole to avoid naming conflicts
 type AppUserRole = UserRole;
 
@@ -50,9 +53,9 @@ const AdminPage = () => {
         if (profilesError) throw profilesError;
         
         // Then get user emails from auth.users (needs admin rights)
-        // Explicitly define the return type for the RPC call
+        // Explicitly define both type arguments for the RPC call
         const { data: authData, error: authError } = await supabase
-          .rpc<AuthUserData[]>('get_users_data');
+          .rpc<AuthUserData[], EmptyParams>('get_users_data');
           
         if (authError) {
           console.error('Error fetching user emails:', authError);
