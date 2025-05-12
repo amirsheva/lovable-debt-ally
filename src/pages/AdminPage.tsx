@@ -8,6 +8,21 @@ import { useToast } from '@/hooks/use-toast';
 import { User, UserRole } from '../types';
 import { queryCustomTable } from '@/utils/supabaseUtils';
 
+interface UserProfile {
+  id: string;
+  full_name?: string;
+}
+
+interface UserRole {
+  user_id: string;
+  role: string;
+}
+
+interface AuthUserData {
+  id: string;
+  email: string;
+}
+
 const AdminPage = () => {
   const [users, setUsers] = useState<(User & { role: UserRole })[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,18 +55,18 @@ const AdminPage = () => {
         if (rolesError) throw rolesError;
         
         // Ensure we have arrays to work with, even if empty
-        const profilesArray = profiles || [];
-        const authDataArray = authData || [];
-        const rolesArray = roles || [];
+        const profilesArray = profiles as UserProfile[] || [];
+        const authDataArray = authData as AuthUserData[] || [];
+        const rolesArray = roles as UserRole[] || [];
         
         // Combine the data with proper type safety
-        const userData = profilesArray.map((profile: any) => {
+        const userData = profilesArray.map((profile) => {
           // Find email from auth data
-          const authUser = authDataArray.find((u: any) => u.id === profile.id);
+          const authUser = authDataArray.find((u) => u.id === profile.id);
           const userEmail = authUser ? authUser.email : '';
           
           // Find role from roles data
-          const userRoleObj = rolesArray.find((r: any) => r.user_id === profile.id);
+          const userRoleObj = rolesArray.find((r) => r.user_id === profile.id);
           const userRole = userRoleObj ? userRoleObj.role : 'user';
           
           return {

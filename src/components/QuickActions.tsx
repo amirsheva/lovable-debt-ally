@@ -5,8 +5,7 @@ import {
   PlusCircle, 
   ArrowUpCircle, 
   Calendar, 
-  BarChart3, 
-  ClipboardCheck 
+  BarChart3 
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
