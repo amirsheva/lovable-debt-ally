@@ -34,7 +34,7 @@ export const useAdminUsers = () => {
   const { toast } = useToast();
 
   // Define the Supabase RPC function with proper typing
-  async function callRpcFunction<T>(functionName: string, params?: Record<string, any>) {
+  async function callRpcFunction<T>(functionName: string, params?: Record<string, any> | null) {
     const { data, error } = await supabase.rpc(functionName, params || {});
     return { data: data as T, error };
   }
