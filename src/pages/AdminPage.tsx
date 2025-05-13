@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '../components/Layout';
@@ -53,8 +54,9 @@ const AdminPage = () => {
         type RPCResponse<T> = { data: T, error: any };
         
         // Use a generalized type assertion for the RPC call
+        // Pass an empty object as parameters to fix the "never" type error
         const { data: authData, error: authError } = await supabase
-          .rpc('get_users_data') as unknown as RPCResponse<AuthUserData[]>;
+          .rpc('get_users_data', {}) as unknown as RPCResponse<AuthUserData[]>;
           
         if (authError) {
           console.error('Error fetching user emails:', authError);
