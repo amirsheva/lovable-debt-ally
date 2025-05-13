@@ -49,14 +49,14 @@ const AdminPage = () => {
           
         if (profilesError) throw profilesError;
         
-        // Explicitly define a properly typed function for RPC calls to fix the type error
-        async function callRPC<T>(functionName: string, params: Record<string, unknown> = {}) {
-          const { data, error } = await supabase.rpc(functionName, params);
+        // Define the Supabase RPC function with proper typing
+        async function callRpcFunction<T>(functionName: string, params?: Record<string, any>) {
+          const { data, error } = await supabase.rpc(functionName, params || {});
           return { data: data as T, error };
         }
         
         // Call the RPC function with proper typing
-        const { data: authData, error: authError } = await callRPC<AuthUserData[]>('get_users_data');
+        const { data: authData, error: authError } = await callRpcFunction<AuthUserData[]>('get_users_data');
           
         if (authError) {
           console.error('Error fetching user emails:', authError);
