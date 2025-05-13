@@ -50,9 +50,9 @@ const AdminPage = () => {
         if (profilesError) throw profilesError;
         
         // Then get user emails from auth.users (needs admin rights)
-        // Properly specify both type arguments for the rpc call: return type and parameters type
+        // Use type assertion for the RPC call since generics aren't working properly
         const { data: authData, error: authError } = await supabase
-          .rpc<AuthUserData[], Record<string, never>>('get_users_data', {});
+          .rpc('get_users_data') as { data: AuthUserData[], error: any };
           
         if (authError) {
           console.error('Error fetching user emails:', authError);
