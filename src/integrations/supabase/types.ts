@@ -9,9 +9,59 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      banks: {
+        Row: {
+          created_at: string
+          id: string
+          is_system: boolean | null
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_system?: boolean | null
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_system?: boolean | null
+          name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      debt_categories: {
+        Row: {
+          created_at: string
+          id: string
+          is_system: boolean | null
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_system?: boolean | null
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_system?: boolean | null
+          name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       debts: {
         Row: {
           amount: number
+          bank_id: string | null
+          category_id: string | null
           created_at: string
           debt_type: string
           description: string
@@ -19,11 +69,14 @@ export type Database = {
           id: string
           installment_amount: number
           installments: number
+          name: string | null
           status: string
           user_id: string | null
         }
         Insert: {
           amount: number
+          bank_id?: string | null
+          category_id?: string | null
           created_at?: string
           debt_type: string
           description: string
@@ -31,11 +84,14 @@ export type Database = {
           id?: string
           installment_amount: number
           installments?: number
+          name?: string | null
           status: string
           user_id?: string | null
         }
         Update: {
           amount?: number
+          bank_id?: string | null
+          category_id?: string | null
           created_at?: string
           debt_type?: string
           description?: string
@@ -43,6 +99,7 @@ export type Database = {
           id?: string
           installment_amount?: number
           installments?: number
+          name?: string | null
           status?: string
           user_id?: string | null
         }
@@ -85,6 +142,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
