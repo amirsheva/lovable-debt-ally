@@ -33,7 +33,7 @@ export const useAdminUsers = () => {
   const [loading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Define the Supabase RPC function with proper typing
+  // Define the Supabase RPC function with proper typing that accepts any parameters
   async function callRpcFunction<T>(functionName: string, params?: Record<string, any> | null) {
     const { data, error } = await supabase.rpc(functionName, params || {});
     return { data: data as T, error };
@@ -50,8 +50,8 @@ export const useAdminUsers = () => {
         
       if (profilesError) throw profilesError;
       
-      // Call the RPC function with proper typing
-      const { data: authData, error: authError } = await callRpcFunction<AuthUserData[]>('get_users_data');
+      // Call the RPC function with explicit type
+      const { data: authData, error: authError } = await callRpcFunction<AuthUserData[]>('get_users_data', {});
         
       if (authError) {
         console.error('Error fetching user emails:', authError);
